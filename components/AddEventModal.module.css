@@ -1,0 +1,170 @@
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 20px;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-muted);
+  margin-bottom: 6px;
+}
+
+.labelSpaced {
+  composes: label;
+  margin-bottom: 8px;
+}
+
+.textInput {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  background: var(--color-bg);
+  border: 1px solid rgba(140, 140, 140, 0.35);
+  border-radius: 10px;
+  color: var(--color-text);
+  font-size: 14.5px;
+}
+
+.pillRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-style: solid;
+  border-width: 1px;
+}
+
+.pillDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.dateTimeRow {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.dateTimeCol {
+  flex: 1;
+}
+
+.dateTimeInput {
+  width: 100%;
+  padding: 11px 12px;
+  background: var(--color-bg);
+  border: 1px solid rgba(140, 140, 140, 0.35);
+  border-radius: 10px;
+  color: var(--color-text);
+  font-size: 13.5px;
+}
+
+.textarea {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  background: var(--color-bg);
+  border: 1px solid rgba(140, 140, 140, 0.35);
+  border-radius: 10px;
+  color: var(--color-text);
+  font-size: 14px;
+  resize: vertical;
+  font-family: var(--font-body);
+}
+
+.attendeeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.attendeePill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 6px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-style: solid;
+  border-width: 1px;
+}
+
+.attendeeAvatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-muted);
+  color: var(--color-bg);
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.error {
+  color: var(--color-error);
+  font-size: 13px;
+  margin: 10px 0 4px;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.cancelButton {
+  flex: 1;
+  padding: 13px;
+  border-radius: 10px;
+  border: 1px solid rgba(140, 140, 140, 0.35);
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.submitButton {
+  flex: 1;
+  padding: 13px;
+  border-radius: 10px;
+  border: none;
+  background: var(--color-accent);
+  color: var(--color-bg);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.submitButton:hover {
+  background: var(--color-accent-hover);
+}

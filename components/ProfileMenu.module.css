@@ -1,0 +1,53 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+}
+
+.dropdown {
+  position: absolute;
+  top: 64px;
+  right: clamp(16px, 3vw, 32px);
+  width: 220px;
+  background: var(--color-panel);
+  border: 1px solid rgba(140, 140, 140, 0.25);
+  border-radius: 14px;
+  padding: 8px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  animation: scaleIn 0.16s ease;
+}
+
+.userInfo {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(140, 140, 140, 0.2);
+  margin-bottom: 6px;
+}
+
+.userName {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.userEmail {
+  font-size: 12px;
+  color: var(--color-muted);
+  margin-top: 1px;
+}
+
+.logoutButton {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-error);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.logoutButton:hover {
+  background: rgba(229, 103, 90, 0.12);
+}
