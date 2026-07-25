@@ -258,8 +258,8 @@ SUPABASE_SERVICE_ROLE_KEY=...   # server-only (Server Actions)
 
 | Phase | Scope | Stories |
 | --- | --- | --- |
-| **0 — Foundations** | Supabase project, Prisma init + first migration, env wiring, CI pipeline, middleware skeleton | — |
-| **1 — Access** | Registration with invite codes, login/logout, onboarding gate, invite-code generation (admin needs codes to test registration) | Epic 1, US 2.2 |
+| **0 — Foundations** | Supabase env, Prisma schema + migration, Supabase SSR clients, auth→public sync trigger, CI pipeline, dev seed (admin account + invite codes + sample events) | — |
+| **1 — Access** | Login/logout with role redirect, middleware + action guards, invite-code generation, registration with invite code, onboarding gate | Epic 1, US 2.2 |
 | **2 — Admin** | Users table (pagination/search/count), codes list & usage view | US 2.1, US 2.3 |
 | **3 — Events** | Create event (validation, modality, picture upload), join/leave, month/week views with overlap layout + ±3-month window, event detail | Epic 3 |
 | **4 — Hardening** | E2E suite, copy review (es-PE), performance pass, production deploy | Epic 4 |
