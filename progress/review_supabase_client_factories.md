@@ -1,0 +1,16 @@
+# Review — feature 3 supabase_client_factories
+**Verdict:** APPROVED
+
+## Acceptance criteria
+- "Server, browser, and middleware Supabase clients exist and use only getAll/setAll" → **met** (evidence: `lib/supabase/server.ts` line 26–28 `getAll()`, line 29–39 `setAll()`; `lib/supabase/client.ts` line 13–16 `createBrowserClient` (library handles cookies internally, no legacy methods); `lib/supabase/middleware.ts` line 30–32 `getAll()`, line 33–40 `setAll()`. Zero uses of deprecated `get`/`set`/`remove` cookie methods. Confirmed against `@supabase/ssr` v0.12.3 types: `CookieMethodsServer` requires `getAll` + optional `setAll`; `CookieMethodsBrowser` has optional `getAll`/`setAll`; the deprecated `CookieMethodsServerDeprecated`/`CookieMethodsBrowserDeprecated` (`get`/`set`/`remove`) are never referenced.)
+- "Factories type-check; server-only modules are marked/imported accordingly" → **met** (evidence: `pnpm exec tsc --noEmit` returns zero errors. `server.ts` line 1: `import "server-only"`. `client.ts` has no `server-only` import (correct — browser module). `middleware.ts` operates in Next.js middleware runtime (server-side by definition) and imports `NextRequest`/`NextResponse` (server-only Next.js APIs), so doesn't need an explicit `import "server-only"` guard.)
+
+## Checkpoints
+- C1: [x] — All harness files present; `bash init.sh` exit code 0 (all 6 stages green: environment, harness files, feature_list.json validation, dependencies, lint/typecheck/tests, review).
+- C2: [x] — Feature #3 is the only `in_progress` task. Its `depends_on` (`[1]`) is `done`. Feature #1 (config/doc) has its artifacts (`.env.example`, `.gitignore`, `package.json`) present. `progress/current.md` accurately describes the active session.
+- C3: [x] — Supabase clients are constructed only in `lib/supabase/*` (architecture §2). `client.ts` references only `NEXT_PUBLIC_*` env vars (no `SUPABASE_SERVICE_ROLE_KEY`). `server.ts` guarded with `import "server-only"`. `.env*` stays gitignored; `.env.example` lists all 5 keys with empty values. No secrets logged, defaulted, or leaked to client code. No Server Actions/redirect concerns apply yet. Dependency layering clean: `pnpm-lock.yaml` present, no `package-lock.json`.
+- C4: [x] — TypeScript strict: zero `any` types in any of the three files (the single grep hit for "any" is the substring in "across" on a comment line). `pnpm exec tsc --noEmit` clean. No tests yet (Vitest not configured until feature #5; feature #3 has no pure logic to unit-test — acceptance criteria are structural "files exist and type-check"). Test gap is noted for when Vitest is bootstrapped. `bash init.sh` correctly warns (not fails) on missing test infrastructure.
+- C5: [x] — No untracked temp files or build output. `git status` shows only expected changes: new `lib/supabase/` (3 files), modified `package.json` (+`server-only`), `pnpm-lock.yaml`, `pnpm-workspace.yaml` (+prisma build allows), `feature_list.json` (status → in_progress), `progress/current.md`. `progress/history.md` has entries for harness creation and feature #1. Feature #3 is correctly `in_progress` — not yet `done` (pending reviewer approval and session closure).
+
+## Required changes
+None.

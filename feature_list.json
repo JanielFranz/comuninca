@@ -45,7 +45,7 @@
         "Schema matches Blueprint §3 (models User, InviteCode, Event, EventAttendee; enums Role/InviteStatus/Modality)",
         "package.json has db:* scripts + postinstall"
       ],
-      "status": "in_progress"
+      "status": "pending"
     },
     {
       "id": 3,
@@ -60,7 +60,7 @@
         "Server, browser, and middleware Supabase clients exist and use only getAll/setAll",
         "Factories type-check; server-only modules are marked/imported accordingly"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 4,
