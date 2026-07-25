@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum InviteStatus {
+  UNUSED
+  USED
+  EXPIRED
+}
+
+enum Modality {
+  IN_PERSON
+  VIRTUAL
+}
+
+model User {
+  id                  String    @id
+  email               String    @unique
+  fullName            String
+  role                Role      @default(USER)
+  birthday            DateTime? @db.Date
+  profession          String?
+  occupation          String?
+  ikigai              String?
+  onboardingCompleted Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+
+  inviteCodeId String?     @unique
+  inviteCode   InviteCode? @relation(fields: [inviteCodeId], references: [id])
+  hostedEvents Event[]     @relation("Host")
+  memberships  EventAttendee[]
+}
+
+model InviteCode {
+  id        String       @id @default(cuid())
+  code      String       @unique
+  status    InviteStatus @default(UNUSED)
+  createdAt DateTime     @default(now())
+  usedAt    DateTime?
+  usedBy    User?
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  category    String
+  date        DateTime  @db.Date
+  startTime   String
+  endTime     String
+  modality    Modality
+  location    String?
+  meetingUrl  String?
+  description String
+  pictureUrl  String?
+  hostId      String
+  host        User      @relation("Host", fields: [hostId], references: [id])
+  attendees   EventAttendee[]
+  createdAt   DateTime  @default(now())
+
+  @@index([date])
+}
+
+model EventAttendee {
+  event   Event  @relation(fields: [eventId], references: [id])
+  eventId String
+  user    User   @relation(fields: [userId], references: [id])
+  userId  String
+
+  @@id([eventId, userId])
+}

@@ -3,31 +3,47 @@
 > Cleared when each session closes; its summary moves to `history.md`. While
 > working, **keep this updated in real time**, not at the end.
 
-- **Feature in progress:** #2 `prisma_schema_init`
-- **Start date:** 2026-07-25
-- **Worktree:** feat/2
+- **Feature in progress:** _none_
+- **Date:** 2026-07-25
 
 ## Next step
 
-- **#2 `prisma_schema_init`** — depends on #1 (done). First in chain: `1 → 2 → 4 → 7 → 6 → 8 → …`
-- **#3 `supabase_client_factories`** — depends on #1 (done). Can run in parallel with #2.
-- #2 and #3 are both eligible; #2 should go first (lower id, per rules).
+- **#3 `supabase_client_factories`** — depends on #1 (done). Can start immediately.
+- **#4 `auth_user_sync_trigger`** — depends on #2 (done). Ready.
+- **#5 `ci_verify_pipeline`** — depends on #2 (done). Ready.
+- #3 and #4 can run in parallel; #2's migration is applied and verified.
 
-## Log
+## Dependency chain status
 
-- 2026-07-25 — **Dependency audit & doc update**: Admin account must be seeded before
-  login, middleware, and admin features can be tested. Changes:
-  - `feature_list.json`: #7 `phase` 1→0, `depends_on` [2]→[2,4] (needs auth→public trigger);
-    #6 `depends_on` [3]→[3,7] (needs seeded accounts for role-aware redirect testing).
-    Both `description` fields updated with explicit rationale.
-  - `docs/technical-blueprint.md` §9: Phase 0 now includes Supabase SSR clients, auth trigger,
-    and dev seed. Phase 1 description updated accordingly.
+```
+✅ 1 (env) → ✅ 2 (schema) →  4 (trigger) → 7 (seed) → 6 (login) → 8 (middleware)
+             ✅ 2 → 5 (CI)
+✅ 1 → 3 (SSR clients) → 6
+```
 
 ## Environment notes
 
-- **Running `init.sh`:** there is no WSL bash on this machine — use Git Bash:
-  `& "C:\Program Files\Git\bin\bash.exe" init.sh` (from the repo root).
-- Local Supabase is running: pooler on 54329, direct Postgres on 54322,
-  API on 54321.
-- `pnpm-workspace.yaml` carries `allowBuilds: { sharp: true }` — required so
-  pnpm 11 runs sharp's install script.
+- Running init.sh: Git Bash at `C:\Program Files\Git\bin\bash.exe`
+- Local Supabase: pooler on 54329, direct Postgres on 54322, API on 54321
+- .env.local has real local Supabase values; DATABASE_URL uses pooler port 54329
+- Prisma migration applied: `20260725193829_init`
+
+## Template (for session resets)
+
+```
+# Current Session
+
+> Cleared when each session closes; its summary moves to `history.md`. While
+> working, **keep this updated in real time**, not at the end.
+
+- **Feature in progress:** <id> — <name>  (or: _none_)
+- **Date:** <YYYY-MM-DD>
+
+## Plan
+
+- <3–5 bullets for the active feature, or "Next step" picks when idle>
+
+## Log
+
+- <timestamped notes while working>
+```

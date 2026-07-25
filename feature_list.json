@@ -45,7 +45,7 @@
         "Schema matches Blueprint §3 (models User, InviteCode, Event, EventAttendee; enums Role/InviteStatus/Modality)",
         "package.json has db:* scripts + postinstall"
       ],
-      "status": "in_progress"
+      "status": "done"
     },
     {
       "id": 3,
