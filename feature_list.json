@@ -1,0 +1,379 @@
+{
+  "project": "Comuninca — community events app (roles, invite codes & calendar)",
+  "description": "Take Comuninca from an in-memory Next.js prototype (demo login, React-state-only seed data) to a persistent RBAC app: admin role (user table + invite/access code generation) and normal-user role (register with invite code, first-login onboarding, post/join/browse events). Source of truth: docs/user-stories.md (Epics 1–4 with US/AC numbering) and docs/technical-blueprint.md (Phases 0–4, data model, CI/CD). Stack: Next.js 16 App Router + React 19 + TypeScript, Supabase (Postgres + Auth + Storage), Prisma ORM, Zod + react-hook-form, GitHub Actions CI, Vercel hosting. UI copy is Spanish (es-PE), centralized in lib/strings.ts.",
+  "definition_of_done": [
+    "Code merged and CI passes (ESLint + Prettier + tsc --noEmit + Vitest)",
+    "Unit tests exist for new pure logic (Zod validators, selectors, week-overlap layout) and assert concrete results",
+    "Acceptance criteria met with executed evidence (manual run or Playwright)",
+    "All user-facing copy lives in lib/strings.ts (es-PE); dates via lib/dateUtils.ts",
+    "New route/action/schema change documented in docs/technical-blueprint.md or a module note"
+  ],
+  "rules": {
+    "one_feature_at_a_time": true,
+    "require_tests_to_close": true,
+    "respect_depends_on": true,
+    "valid_status": ["pending", "in_progress", "done", "blocked"]
+  },
+  "features": [
+    {
+      "id": 1,
+      "name": "env_and_supabase_setup",
+      "title": "Supabase project + env wiring",
+      "phase": 0,
+      "plan_ref": "Blueprint Phase 0 / §8",
+      "depends_on": [],
+      "paths": [".env.example", ".gitignore", "package.json"],
+      "description": "Create the Supabase project (Postgres + Auth + Storage). Wire env vars per Blueprint §8: DATABASE_URL (pgBouncer pooled, runtime), DIRECT_URL (direct, migrations), NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (server-only, never in client code). Track .env.example with every key empty-valued; keep .env* ignored. Install runtime deps: prisma, @prisma/client, @supabase/ssr, @supabase/supabase-js, zod, react-hook-form, @hookform/resolvers; dev deps: vitest, prettier.",
+      "acceptance": [
+        ".env.example lists every variable with empty values; no real secret in any tracked file",
+        "Both DATABASE_URL (pooled) and DIRECT_URL (direct) connect to the Supabase Postgres",
+        "pnpm install completes with the new dependencies"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 2,
+      "name": "prisma_schema_init",
+      "title": "Prisma schema + initial migration + db scripts",
+      "phase": 0,
+      "plan_ref": "Blueprint §3 (data model)",
+      "depends_on": [1],
+      "paths": ["prisma/schema.prisma", "prisma/migrations/", "lib/db.ts", "package.json"],
+      "description": "Author prisma/schema.prisma exactly per Blueprint §3: User (id mirrors auth.users.id; email unique; role Role default USER; birthday?; profession?/occupation?/ikigai?; onboardingCompleted=false; createdAt; inviteCodeId unique), InviteCode (code unique; status InviteStatus UNUSED/USED/EXPIRED; createdAt; usedAt?; usedBy relation), Event (title; category String — TBD per US 3.1.1; date @db.Date; startTime/endTime 'HH:MM'; modality Modality IN_PERSON/VIRTUAL; location?; meetingUrl?; description; pictureUrl?; hostId; @@index([date])), EventAttendee (@@id([eventId, userId])). Enums: Role, InviteStatus, Modality. Run prisma migrate dev --name init against DIRECT_URL and commit prisma/migrations/ as the schema source of truth. Add db:generate, db:migrate, db:deploy, db:seed + postinstall (prisma generate) scripts. lib/db.ts exports a Prisma singleton on DATABASE_URL. Never db push.",
+      "acceptance": [
+        "prisma migrate status against DIRECT_URL reports no drift; prisma/migrations/init is committed",
+        "Schema matches Blueprint §3 (models User, InviteCode, Event, EventAttendee; enums Role/InviteStatus/Modality)",
+        "package.json has db:* scripts + postinstall"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 3,
+      "name": "supabase_client_factories",
+      "title": "Supabase SSR client factories",
+      "phase": 0,
+      "plan_ref": "Blueprint §4",
+      "depends_on": [1],
+      "paths": ["lib/supabase/server.ts", "lib/supabase/client.ts", "lib/supabase/middleware.ts"],
+      "description": "Add the three @supabase/ssr client factories: server.ts (createServerClient bound to next/headers cookies() for Server Components/Actions), client.ts (createBrowserClient for client components), middleware.ts (updateSession helper consumed by root middleware.ts in feature 8). HARD RULE: implement ONLY getAll/setAll cookie methods (never the legacy get/set/remove). Server factories must never be imported from client components.",
+      "acceptance": [
+        "Server, browser, and middleware Supabase clients exist and use only getAll/setAll",
+        "Factories type-check; server-only modules are marked/imported accordingly"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 4,
+      "name": "auth_user_sync_trigger",
+      "title": "auth.users → public.User sync trigger",
+      "phase": 0,
+      "plan_ref": "Blueprint §3 (Auth sync)",
+      "depends_on": [2],
+      "paths": ["supabase/migrations/"],
+      "description": "Versioned Postgres trigger in supabase/migrations/ on auth.users AFTER INSERT that creates the matching public.User row (id = auth.users.id, email = auth.users.email, role = USER, onboardingCompleted = false). The registration action (feature 10) later fills fullName + inviteCodeId and consumes the code. Auth-user deletion cascades to the public row.",
+      "acceptance": [
+        "Signing up an auth user creates a public.User row with matching id/email and role USER",
+        "Trigger SQL is version-controlled and applied to the Supabase project"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 5,
+      "name": "ci_verify_pipeline",
+      "title": "GitHub Actions verify pipeline",
+      "phase": 0,
+      "plan_ref": "Blueprint §7 (job verify)",
+      "depends_on": [2],
+      "paths": [".github/workflows/ci.yml", "package.json", ".prettierrc"],
+      "description": "CI job `verify` on every PR + push to main: checkout → Node 22 + pnpm cache → pnpm install --frozen-lockfile → prisma validate + prisma generate → ESLint + Prettier check → tsc --noEmit → vitest run → next build. No deploy in this job (feature 23).",
+      "acceptance": [
+        "The verify workflow runs on a PR and is green",
+        "A failing lint, typecheck, unit-test, or build step blocks the PR"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 6,
+      "name": "login_logout",
+      "title": "Login + logout with role-aware redirect",
+      "phase": 1,
+      "plan_ref": "user-stories.md US 1.2, US 1.3",
+      "depends_on": [3],
+      "paths": ["app/(auth)/login/page.tsx", "lib/actions/auth.ts", "components/LoginScreen.tsx", "lib/strings.ts"],
+      "description": "Replace the demo submitLogin (any credentials work) in CalendarApp.tsx with real auth. app/(auth)/login renders the existing LoginScreen UI (es-PE copy from lib/strings.ts) wired to a Server Action calling supabase.auth.signInWithPassword. On success read the user's role from public.User and redirect: ADMIN → /admin, USER → /calendar (onboarding gate arrives in feature 11). Wrong email OR password returns the SAME generic error (US 1.2.4 — never reveal which field). Logout from ProfileMenu calls signOut → /login (US 1.3.1). Server code authorizes via supabase.auth.getUser() (never getSession alone).",
+      "acceptance": [
+        "Valid credentials start a session; an admin lands on /admin and a normal user on /calendar",
+        "Invalid credentials show one generic error message",
+        "Cerrar sesión ends the session and returns to /login"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 7,
+      "name": "dev_seed",
+      "title": "Dev seed: admin user, invite codes, sample events",
+      "phase": 1,
+      "plan_ref": "Blueprint §10 (seed repurpose)",
+      "depends_on": [2],
+      "paths": ["prisma/seed.ts"],
+      "description": "Idempotent local-dev seed replacing lib/constants.ts seed data: (1) one admin — create the auth user via supabase.auth.admin.createUser with the service-role key (documented test credentials in .env.example comments), let the feature-4 trigger create public.User, then promote role to ADMIN; (2) a batch of UNUSED invite codes for manual registration testing; (3) the 12 seed events from lib/constants.ts remapped to seeded users with real hostIds/attendeeIds. Never runs against production.",
+      "acceptance": [
+        "pnpm db:seed is idempotent (safe to re-run)",
+        "Local login works with the seeded admin; UNUSED codes and the 12 events exist in Postgres"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 8,
+      "name": "rbac_middleware_and_guards",
+      "title": "middleware.ts route protection + action guards",
+      "phase": 1,
+      "plan_ref": "user-stories.md US 2.1.6, US 4.1.1–4.1.2; Blueprint §4",
+      "depends_on": [6],
+      "paths": ["middleware.ts", "lib/auth.ts"],
+      "description": "Root middleware.ts matching /calendar, /admin/:path*, /onboarding: refresh the Supabase session cookie via updateSession (feature 3), redirect unauthenticated users to /login, and redirect non-admin sessions away from /admin/* to /calendar. Exclude /login, /register, /auth/*, and static assets from the matcher. lib/auth.ts exports requireUser() (getUser → session + public.User row; redirect /login when absent) and requireAdmin() (role check → deny/redirect) — EVERY Server Action re-verifies the role server-side (defense in depth; middleware is never the only gate).",
+      "acceptance": [
+        "Unauthenticated /calendar, /admin/*, /onboarding redirect to /login",
+        "A USER-role session hitting /admin/* is redirected away",
+        "requireUser/requireAdmin are unit-tested and consumed by subsequent actions"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 9,
+      "name": "invite_code_generation",
+      "title": "Admin: generate invite/access codes popup",
+      "phase": 1,
+      "plan_ref": "user-stories.md US 2.2",
+      "depends_on": [7, 8],
+      "paths": ["app/admin/codes/page.tsx", "components/admin/GenerateCodesModal.tsx", "lib/actions/invites.ts", "lib/validation/invites.ts", "lib/strings.ts"],
+      "description": "On /admin/codes, 'Generar código de invitación' opens a modal (reuse components/Modal.tsx). Step 1 asks how many codes to create — Zod-validated integer, min 1, max 50; invalid quantity disables the confirm action with a hint (AC 2.2.2). Server Action generateInviteCodes(count) requires admin and creates exactly count unique codes (crypto.randomBytes/nanoid, ≥128-bit entropy per US 4.1.4) with status UNUSED + createdAt. Step 2 (same modal, transitions in place) lists the newly generated codes with a 'copy all' action (full set in one click, confirmation shown, AC 2.2.4) and a per-row copy action (AC 2.2.5). Closing returns to the dashboard; codes persist for the list view (feature 13).",
+      "acceptance": [
+        "Popup asks for quantity; empty/zero/out-of-range quantity blocks generation with a hint",
+        "Confirming creates exactly N unique codes and the popup switches to the results step showing them",
+        "'Copy all' copies the whole set in a single click and per-row copy copies one code; both show a confirmation",
+        "Each code is persisted with its string, UNUSED status, and creation date"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 10,
+      "name": "registration_with_invite_code",
+      "title": "Register normal-user account with invite code",
+      "phase": 1,
+      "plan_ref": "user-stories.md US 1.1",
+      "depends_on": [9],
+      "paths": ["app/(auth)/register/page.tsx", "lib/actions/auth.ts", "lib/validation/auth.ts", "lib/strings.ts"],
+      "description": "Register page (es-PE, copy in lib/strings.ts) with full name, email, password, and invite/access code — Zod registerSchema shared client/server. Server Action register: (1) code required (AC 1.1.2); (2) code must exist and be UNUSED (not USED/EXPIRED) (AC 1.1.3); (3) email not already registered (AC 1.1.6); (4) in ONE prisma.$transaction: supabase.auth.signUp → update the trigger-created public.User (fullName, inviteCodeId, role=USER — never ADMIN, AC 1.1.5) → mark the code USED with usedBy/usedAt (AC 2.2.7); any auth failure rolls the code consumption back. Success issues a session and redirects into the onboarding gate (feature 11).",
+      "acceptance": [
+        "Valid unused code + valid fields creates the account, consumes the code (USED + usedBy/usedAt), and starts a session",
+        "Missing code, invalid/used/expired code, or duplicate email each show their specific error and create nothing",
+        "The created account role is always USER",
+        "A second registration attempt with the same code is rejected"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 11,
+      "name": "onboarding_gate",
+      "title": "First-login onboarding: Profesión / Ocupación / Ikigai",
+      "phase": 1,
+      "plan_ref": "user-stories.md US 1.4",
+      "depends_on": [10],
+      "paths": ["app/onboarding/page.tsx", "lib/actions/onboarding.ts", "lib/validation/onboarding.ts", "middleware.ts", "lib/strings.ts"],
+      "description": "Gate: middleware + Server Component check — an authenticated USER with onboardingCompleted=false is forced to /onboarding before reaching /calendar; admins never see it (AC 1.4.8). Form (es-PE, copy in lib/strings.ts per AC 1.4.9): Profesión optional, Ocupación mandatory, Ikigai optional (AC 1.4.2). Zod onboardingSchema enforces occupation required (AC 1.4.3). Submit persists the three fields, flips onboardingCompleted=true, and lands on /calendar (AC 1.4.4). The form cannot be dismissed/skipped without Ocupación (AC 1.4.6) and is never shown again once completed (AC 1.4.5).",
+      "acceptance": [
+        "First login lands on /onboarding; submitting with Ocupación empty is blocked with an error",
+        "Valid submit persists all three fields, flips the flag, and lands on /calendar",
+        "Subsequent logins skip the form; admins never see it; navigating to /calendar with the flag false redirects back to /onboarding"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 12,
+      "name": "admin_users_table",
+      "title": "Admin: normal-users table (count, search, pagination)",
+      "phase": 2,
+      "plan_ref": "user-stories.md US 2.1 (+ US 1.4.7)",
+      "depends_on": [8, 11],
+      "paths": ["app/admin/users/page.tsx", "components/admin/UsersTable.tsx", "lib/actions/admin.ts", "lib/strings.ts"],
+      "description": "app/admin/users (admin-gated): Server Component queries User where role=USER. Columns: full name, email, registration date (createdAt, es-PE format), birthday, occupation, and the invite code used at sign-up (inviteCode.code); profession and ikigai available as columns or expandable row details (US 1.4.7). Total count header ('Total de usuarios: N', AC 2.1.3). Server-side pagination via searchParams (page size 20, AC 2.1.4). Search box filters by name/email server-side (AC 2.1.5). Non-admin access denied by middleware + action guard (AC 2.1.6).",
+      "acceptance": [
+        "The table lists all USER-role accounts with the columns above plus the total count",
+        "Pagination reaches every user; search filters by name/email",
+        "A non-admin or unauthenticated visitor cannot load the page"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 13,
+      "name": "admin_codes_list",
+      "title": "Admin: invite codes list + usage tracking",
+      "phase": 2,
+      "plan_ref": "user-stories.md US 2.3",
+      "depends_on": [9],
+      "paths": ["app/admin/codes/page.tsx", "components/admin/CodesTable.tsx", "lib/actions/invites.ts", "lib/strings.ts"],
+      "description": "The /admin/codes list beneath the generate action: every InviteCode with a status badge — UNUSED shows 'Sin usar' (AC 2.3.2); USED shows the consuming user's name/email + usedAt in es-PE format (AC 2.3.1); EXPIRED (revoked) is visually distinct from active unused codes (AC 2.3.3). Add a revoke action on UNUSED codes (status → EXPIRED) so the revoked state is reachable and a revoked code can no longer register anyone (ties to US 1.1.3).",
+      "acceptance": [
+        "Used codes show consumer name/email + consumption date; unused show 'Sin usar'; expired/revoked are visually distinct",
+        "Revoking an unused code flips it to EXPIRED and registration with it is rejected"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 14,
+      "name": "events_data_layer",
+      "title": "Calendar data from Postgres (replace React-state seeds)",
+      "phase": 3,
+      "plan_ref": "Blueprint §5 (Epic 3) / user-stories.md US 3.3",
+      "depends_on": [8],
+      "paths": ["app/calendar/page.tsx", "lib/actions/events.ts", "lib/selectors.ts", "lib/types.ts", "components/CalendarApp.tsx"],
+      "description": "Move the calendar from in-memory SEED_EVENTS to Postgres: app/calendar/page.tsx is a Server Component fetching events for the visible window (month or week, clamped to the ±3-month cap from feature 19) via Prisma (@@index([date])), including host + attendees. lib/types.ts CalendarEvent.hostId/attendeeIds now hold real user ids — drop the 'me' convention; buildActiveEvent resolves the current user from the session instead. CalendarApp keeps its UI state (modals, view toggle, day handling) but receives events + currentUser as props; MonthView/WeekView rendering stays as-is.",
+      "acceptance": [
+        "The calendar renders events from Postgres; SEED_EVENTS is no longer imported by app code",
+        "Month and week views show the seeded events exactly like the prototype did"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 15,
+      "name": "create_event_with_validation",
+      "title": "Create event: form, Zod validation, modality rules",
+      "phase": 3,
+      "plan_ref": "user-stories.md US 3.1",
+      "depends_on": [14],
+      "paths": ["components/AddEventModal.tsx", "lib/actions/events.ts", "lib/validation/events.ts", "lib/strings.ts"],
+      "description": "Wire AddEventModal to Server Action createEvent (requires user). Fields per AC 3.1.1: title, category (kept as the prototype's six options until the owner defines the final set), date, start/end time, modality (Presencial/Virtual selector), location, description, picture (feature 16). Zod eventSchema carries every rule with its es-PE message: all fields required — 'Todos los campos son obligatorios.' (AC 3.1.2); no past date (AC 3.1.5); today + already-passed start time blocked (AC 3.1.6); end must be after start (AC 3.1.7); Virtual ⇒ location NOT required and meetingUrl optional (AC 3.1.9); Presencial ⇒ location required (AC 3.1.10); meetingUrl persisted when provided (AC 3.1.11). Valid submit persists the event with the signed-in user as host, shows the 'Evento agregado al calendario' toast, closes the modal, and revalidates the calendar (AC 3.1.3). Empty-day and day-modal entry points keep pre-filling the date (AC 3.1.4).",
+      "acceptance": [
+        "Each invalid case (empty required field, past date, past start time today, end ≤ start, Presencial without address) shows its exact message and creates nothing",
+        "Virtual without an address succeeds with no location stored; Virtual with a link stores meetingUrl",
+        "Valid submit creates the event with hostId = current user, shows the success toast, and the event appears on the calendar"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 16,
+      "name": "event_picture_upload",
+      "title": "Event picture upload to Supabase Storage (fixed size)",
+      "phase": 3,
+      "plan_ref": "user-stories.md US 3.1.1, US 3.4.4; Blueprint §1 (storage)",
+      "depends_on": [15],
+      "paths": ["components/AddEventModal.tsx", "lib/storage.ts", "lib/actions/events.ts", "next.config.ts"],
+      "description": "Supabase Storage bucket event-pictures (public read). The form's picture input validates type (jpeg/png/webp) and byte size, resizes client-side (canvas) to the fixed dimensions the form defines, and the create action uploads it via the server client to event-pictures/<eventId>.<ext>, saving the public URL on Event.pictureUrl. next.config.ts whitelists the Supabase Storage host in images.remotePatterns for next/image.",
+      "acceptance": [
+        "An accepted picture is stored at the fixed size and its URL saved on the event",
+        "Oversized or unsupported files are rejected before upload with a typed error",
+        "next/image renders the stored picture"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 17,
+      "name": "join_leave_event",
+      "title": "Join / leave event toggle",
+      "phase": 3,
+      "plan_ref": "user-stories.md US 3.2",
+      "depends_on": [14],
+      "paths": ["components/EventDetailModal.tsx", "lib/actions/events.ts"],
+      "description": "Server Action toggleJoin(eventId): requires user; if an EventAttendee row (eventId, userId) exists → delete (leave), else → create (join); revalidate the calendar. EventDetailModal button reflects membership: 'Unirme al evento' ↔ 'Ya vas ✓' (AC 3.2.1/3.2.2); attendee list + 'ASISTEN (N)' count update from the DB (AC 3.2.3); the host renders as 'Tú' when the viewer is the host (AC 3.2.4). The EventAttendee composite PK makes double-join impossible.",
+      "acceptance": [
+        "Joining adds the current user and switches the button to 'Ya vas ✓'; clicking again removes them and reverts it",
+        "Attendee count and list update after each toggle",
+        "Re-joining an already-joined event never duplicates the attendee"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 18,
+      "name": "week_overlap_layout",
+      "title": "Week view: side-by-side layout for overlapping events",
+      "phase": 3,
+      "plan_ref": "user-stories.md AC 3.3.2, 3.3.12–3.3.15",
+      "depends_on": [14],
+      "paths": ["lib/selectors.ts", "lib/types.ts", "components/WeekView.tsx", "tests/unit/week-overlap.test.ts"],
+      "description": "Fix the current WeekView stacking bug (blocks render with only top/height, so identical-time events overlap and hide each other). Extend buildWeekData with a pure interval-cluster packing pass: group each day's blocks into overlap clusters, assign each block a column index within its cluster, and return left/width percentages on WeekBlock. Identical start+end ⇒ equal fractions of the column width (AC 3.3.12); partial overlaps ⇒ side-by-side while intersecting (AC 3.3.13); enforce a minimum readable width so title (truncated if needed) + time label stay visible (AC 3.3.14); each card remains individually clickable and opens only its own detail modal (AC 3.3.15). Vitest covers: identical pair, triple overlap, chained partial overlaps, non-overlapping events.",
+      "acceptance": [
+        "Two identical-time events render side-by-side at equal width and each opens its own detail modal",
+        "Partial overlaps never fully hide a card; title + time stay readable",
+        "Unit tests cover the clustering cases"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 19,
+      "name": "calendar_navigation_window",
+      "title": "±3-month calendar navigation window",
+      "phase": 3,
+      "plan_ref": "user-stories.md AC 3.3.5, 3.3.7–3.3.11",
+      "depends_on": [14],
+      "paths": ["app/calendar/page.tsx", "components/Header.tsx", "lib/dateUtils.ts"],
+      "description": "Bound calendar navigation to [current month − 3, current month + 3]: 'Anterior' is disabled (no-op) on the earliest allowed month and 'Siguiente' on the latest (AC 3.3.8/3.3.9); 'Hoy' always returns to the current period inside the window (AC 3.3.10). Week view applies the same boundary — a week fully outside the window cannot be navigated to (AC 3.3.11). The Server Component clamps out-of-range month/week URL params into the window instead of erroring.",
+      "acceptance": [
+        "Navigation past either edge is blocked/disabled; 'Hoy' snaps back into the window",
+        "Week view respects the same boundary; an out-of-range URL param is clamped, not a 500"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 20,
+      "name": "event_detail_modal_parity",
+      "title": "Event detail modal: full details + Virtual display",
+      "phase": 3,
+      "plan_ref": "user-stories.md US 3.4",
+      "depends_on": [16, 17],
+      "paths": ["components/EventDetailModal.tsx", "lib/selectors.ts", "lib/strings.ts"],
+      "description": "EventDetailModal renders the full DB-backed event: category label + color, date + time range (es-PE), modality display — Presencial shows the physical address; Virtual shows a 'Virtual' label plus meetingUrl as a clickable link when provided (AC 3.4.1) — description, the uploaded picture at its fixed size (AC 3.4.4), host name/initials, and the attendee list with 'Nadie aún — sé el primero en unirte.' when empty (AC 3.4.2). Closes via Esc/close button/backdrop without losing calendar state (AC 3.4.3). Identical behavior from every entry point: week overlap card, day-modal item, month day (AC 3.4.5).",
+      "acceptance": [
+        "Virtual events show the 'Virtual' label + clickable link; Presencial events show the address",
+        "The picture renders at the fixed size; an empty attendee list shows the empty-state copy",
+        "Opening from any entry point shows the same full modal with working join/leave"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 21,
+      "name": "i18n_copy_consolidation",
+      "title": "es-PE copy consolidation (lib/strings.ts)",
+      "phase": 4,
+      "plan_ref": "user-stories.md US 4.2",
+      "depends_on": [20],
+      "paths": ["lib/strings.ts", "app/", "components/"],
+      "description": "Sweep every screen added by features 6–20 (login, register, onboarding, admin users/codes, event forms/modals, errors, toasts) and move any hard-coded string into lib/strings.ts (es-PE), following the existing namespaced pattern. Dates/times render only via lib/dateUtils.ts (Intl es-PE) — registration dates, code consumption dates, event times.",
+      "acceptance": [
+        "No user-facing string is hard-coded outside lib/strings.ts",
+        "All dates/times use the es-PE formatting helpers"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 22,
+      "name": "e2e_smoke_suite",
+      "title": "Playwright E2E smoke suite as a CI gate",
+      "phase": 4,
+      "plan_ref": "Blueprint §1 (testing) / §7",
+      "depends_on": [20, 5],
+      "paths": ["tests/e2e/", "playwright.config.ts", ".github/workflows/ci.yml"],
+      "description": "Playwright suite against a seeded preview/staging deploy: (1) register with a valid code → onboarding → calendar; (2) invalid / used / expired codes rejected; (3) admin login → generate codes → codes list shows them 'Sin usar' → users table lists the new user; (4) create event including each validation error and Virtual-without-address; (5) join/leave toggles and persists across reload; (6) RBAC: unauthenticated redirects to /login, USER blocked from /admin; (7) week-view overlap: two identical-time events both visible and individually clickable. Wire as a required CI check (pre-deploy or nightly cron per Blueprint §7).",
+      "acceptance": [
+        "The suite covers flows 1–7 and runs green in CI",
+        "The E2E check is required before production deploy"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": 23,
+      "name": "deploy_pipeline",
+      "title": "Vercel deploy + migration release step",
+      "phase": 4,
+      "plan_ref": "Blueprint §7 (job deploy)",
+      "depends_on": [5],
+      "paths": [".github/workflows/ci.yml", "vercel.json", ".env.example"],
+      "description": "Job `deploy` on merge to main (needs verify): prisma migrate deploy against production DIRECT_URL from the CI/release step — never migrate dev / db push in prod, never inside next build — then Vercel production deploy. Vercel env scoping: preview → staging Supabase, production → prod Supabase; mark DATABASE_URL, DIRECT_URL, and SUPABASE_SERVICE_ROLE_KEY as Sensitive. GitHub secrets per Blueprint §7 (DATABASE_URL, DIRECT_URL, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, VERCEL_TOKEN).",
+      "acceptance": [
+        "Merging to main applies migrations and deploys production; preview PRs hit staging — the two never cross",
+        "migrate deploy runs from the release step; migrate status shows no drift"
+      ],
+      "status": "pending"
+    }
+  ]
+}
