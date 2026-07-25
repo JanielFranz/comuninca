@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "leader",
+  "permission": {
+    "bash": {
+      "*": "ask",
+      "bash init.sh": "allow",
+      "pnpm *": "allow",
+      "node *": "allow"
+    }
+  }
+}
