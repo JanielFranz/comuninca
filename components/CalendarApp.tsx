@@ -38,6 +38,7 @@ import {
   weekdayLabels,
 } from "@/lib/selectors"
 import { STRINGS } from "@/lib/strings"
+import { logout as serverLogout } from "@/lib/actions/auth"
 
 import LoginScreen from "./LoginScreen"
 import Header from "./Header"
@@ -321,14 +322,10 @@ export default function CalendarApp() {
     patchState({ showProfileMenu: false })
   }
   function logout() {
-    patchState({
-      screen: "login",
-      showProfileMenu: false,
-      currentUser: null,
-      loginEmail: "",
-      loginPassword: "",
-      loginError: "",
-    })
+    // Close the profile menu immediately for a snappy UX,
+    // then call the Server Action which will sign out and redirect to /login.
+    patchState({ showProfileMenu: false })
+    serverLogout()
   }
 
   // ---- Derived / view-model data ----

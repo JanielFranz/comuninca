@@ -120,7 +120,7 @@
         "Invalid credentials show one generic error message",
         "Cerrar sesión ends the session and returns to /login"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 7,
@@ -135,7 +135,7 @@
         "pnpm db:seed is idempotent (safe to re-run)",
         "Local login works with the seeded admin; UNUSED codes and the 12 events exist in Postgres"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 8,
