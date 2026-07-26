@@ -37,16 +37,16 @@ covers code style and framework patterns.
 
 ## 3. Naming
 
-| Thing | Convention | Example |
-|---|---|---|
-| Components / files exporting a component | PascalCase | `UsersTable.tsx`, `GenerateCodesModal.tsx` |
-| CSS Modules | same name as component | `UsersTable.module.css` |
-| Hooks | `useX` camelCase | `useCalendarNav` |
-| Server actions | `verbNoun` | `createEvent`, `toggleJoin`, `generateInviteCodes` |
-| lib helpers | camelCase | `requireUser`, `buildWeekData`, `dateKey` |
-| Types / Zod schemas | PascalCase | `CalendarEvent`, `RegisterSchema` |
-| Constants | `UPPER_SNAKE_CASE` | `STRINGS`, `CATEGORY_META`, `MOBILE_BREAKPOINT` |
-| Prisma models | singular PascalCase | `User`, `InviteCode`, `Event`, `EventAttendee` |
+| Thing                                    | Convention             | Example                                            |
+| ---------------------------------------- | ---------------------- | -------------------------------------------------- |
+| Components / files exporting a component | PascalCase             | `UsersTable.tsx`, `GenerateCodesModal.tsx`         |
+| CSS Modules                              | same name as component | `UsersTable.module.css`                            |
+| Hooks                                    | `useX` camelCase       | `useCalendarNav`                                   |
+| Server actions                           | `verbNoun`             | `createEvent`, `toggleJoin`, `generateInviteCodes` |
+| lib helpers                              | camelCase              | `requireUser`, `buildWeekData`, `dateKey`          |
+| Types / Zod schemas                      | PascalCase             | `CalendarEvent`, `RegisterSchema`                  |
+| Constants                                | `UPPER_SNAKE_CASE`     | `STRINGS`, `CATEGORY_META`, `MOBILE_BREAKPOINT`    |
+| Prisma models                            | singular PascalCase    | `User`, `InviteCode`, `Event`, `EventAttendee`     |
 
 - snake_case is **not** used in TS; reserve it for DB columns Prisma maps.
 - Never hard-code copy, route paths, or magic numbers inline — copy goes to
@@ -57,7 +57,7 @@ covers code style and framework patterns.
 - Import the shared client: `import { prisma } from "@/lib/db"`. Never
   construct a client elsewhere.
 - Schema changes go through **Prisma migrations** (`pnpm exec prisma migrate
-  dev`); never `db push` against Supabase, never `migrate dev` in production
+dev`); never `db push` against Supabase, never `migrate dev` in production
   (`migrate deploy` only, from the CI release step).
 - Keep `prisma/schema.prisma` in sync with Blueprint §3; when they diverge,
   update the blueprint too.

@@ -5,13 +5,16 @@
   justify-content: center;
   padding: 24px;
   background-color: var(--color-bg);
-  background-image: radial-gradient(
+  background-image:
+    radial-gradient(
       circle at 50% 15%,
       rgba(232, 172, 62, 0.14),
       transparent 55%
     ),
     radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 100% 100%, 26px 26px;
+  background-size:
+    100% 100%,
+    26px 26px;
 }
 
 .container {

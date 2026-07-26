@@ -1,13 +1,13 @@
-import type { WeekData } from "@/lib/types";
-import styles from "./WeekView.module.css";
+import type { WeekData } from "@/lib/types"
+import styles from "./WeekView.module.css"
 
 interface WeekViewProps {
-  weekData: WeekData;
-  onEventClick: (id: string) => void;
+  weekData: WeekData
+  onEventClick: (id: string) => void
 }
 
 export default function WeekView({ weekData, onEventClick }: WeekViewProps) {
-  const { days, hours, nowTop } = weekData;
+  const { days, hours, nowTop } = weekData
 
   return (
     <div className={styles.wrapper}>
@@ -67,5 +67,5 @@ export default function WeekView({ weekData, onEventClick }: WeekViewProps) {
         ))}
       </div>
     </div>
-  );
+  )
 }

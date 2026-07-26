@@ -6,19 +6,19 @@
 
 ## Files created
 
-| File | Description |
-|------|-------------|
-| `prisma/schema.prisma` | Prisma schema with 4 models (User, InviteCode, Event, EventAttendee) + 3 enums (Role, InviteStatus, Modality), exactly per Blueprint §3 |
-| `prisma.config.ts` | Prisma 7 config: datasource URL from `DIRECT_URL`, migrations path, seed pointer (`tsx prisma/seed.ts`), dotenv loading |
-| `prisma/migrations/20260725193829_init/migration.sql` | Auto-generated migration: creates 3 enum types + 4 tables + indexes + foreign keys |
-| `prisma/migrations/migration_lock.toml` | Prisma migration lockfile |
-| `lib/db.ts` | Prisma singleton using `@prisma/adapter-pg` with `DATABASE_URL` (pooled connection). Global caching in dev, fresh in production. |
-| `.env` | Copy of `.env.local` for Prisma CLI env loading (gitignored). |
+| File                                                  | Description                                                                                                                             |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `prisma/schema.prisma`                                | Prisma schema with 4 models (User, InviteCode, Event, EventAttendee) + 3 enums (Role, InviteStatus, Modality), exactly per Blueprint §3 |
+| `prisma.config.ts`                                    | Prisma 7 config: datasource URL from `DIRECT_URL`, migrations path, seed pointer (`tsx prisma/seed.ts`), dotenv loading                 |
+| `prisma/migrations/20260725193829_init/migration.sql` | Auto-generated migration: creates 3 enum types + 4 tables + indexes + foreign keys                                                      |
+| `prisma/migrations/migration_lock.toml`               | Prisma migration lockfile                                                                                                               |
+| `lib/db.ts`                                           | Prisma singleton using `@prisma/adapter-pg` with `DATABASE_URL` (pooled connection). Global caching in dev, fresh in production.        |
+| `.env`                                                | Copy of `.env.local` for Prisma CLI env loading (gitignored).                                                                           |
 
 ## Files modified
 
-| File | Change |
-|------|--------|
+| File           | Change                                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `package.json` | Added scripts: `postinstall` (prisma generate), `db:generate`, `db:migrate`, `db:deploy`, `db:seed`. Added deps: `dotenv`, `@prisma/adapter-pg`. |
 
 ## Prisma 7 adaptation
@@ -51,14 +51,14 @@ Your database is now in sync with your schema.
 
 ## Verification results
 
-| Check | Result |
-|-------|--------|
-| `pnpm exec prisma migrate status` | ✅ "Database schema is up to date!" (no drift) |
-| `pnpm exec prisma generate` | ✅ Generated Prisma Client v7.9.0 |
-| `pnpm exec tsc --noEmit` | ✅ TypeScript typecheck clean |
-| `bash init.sh` | ✅ All checks pass: env, harness, feature_list, typecheck |
-| Schema matches Blueprint §3 | ✅ 4 models, 3 enums, all fields/relations/indexes present |
-| `package.json` scripts | ✅ `postinstall`, `db:generate`, `db:migrate`, `db:deploy`, `db:seed` |
+| Check                             | Result                                                                |
+| --------------------------------- | --------------------------------------------------------------------- |
+| `pnpm exec prisma migrate status` | ✅ "Database schema is up to date!" (no drift)                        |
+| `pnpm exec prisma generate`       | ✅ Generated Prisma Client v7.9.0                                     |
+| `pnpm exec tsc --noEmit`          | ✅ TypeScript typecheck clean                                         |
+| `bash init.sh`                    | ✅ All checks pass: env, harness, feature_list, typecheck             |
+| Schema matches Blueprint §3       | ✅ 4 models, 3 enums, all fields/relations/indexes present            |
+| `package.json` scripts            | ✅ `postinstall`, `db:generate`, `db:migrate`, `db:deploy`, `db:seed` |
 
 ## Decisions
 

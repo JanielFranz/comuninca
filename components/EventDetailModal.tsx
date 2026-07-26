@@ -1,12 +1,12 @@
-import type { ActiveEventView } from "@/lib/types";
-import { STRINGS } from "@/lib/strings";
-import Modal, { ModalCloseButton } from "./Modal";
-import styles from "./EventDetailModal.module.css";
+import type { ActiveEventView } from "@/lib/types"
+import { STRINGS } from "@/lib/strings"
+import Modal, { ModalCloseButton } from "./Modal"
+import styles from "./EventDetailModal.module.css"
 
 interface EventDetailModalProps {
-  event: ActiveEventView;
-  onToggleJoin: () => void;
-  onClose: () => void;
+  event: ActiveEventView
+  onToggleJoin: () => void
+  onClose: () => void
 }
 
 export default function EventDetailModal({
@@ -14,13 +14,22 @@ export default function EventDetailModal({
   onToggleJoin,
   onClose,
 }: EventDetailModalProps) {
-  const t = STRINGS.eventDetailModal;
+  const t = STRINGS.eventDetailModal
 
   return (
-    <Modal onClose={onClose} maxWidth={440} maxHeight="85vh" zIndex={110} closeLabel={t.close}>
+    <Modal
+      onClose={onClose}
+      maxWidth={440}
+      maxHeight="85vh"
+      zIndex={110}
+      closeLabel={t.close}
+    >
       <div className={styles.headerRow}>
         <div className={styles.categoryTag} style={{ background: event.tagBg }}>
-          <span className={styles.categoryDot} style={{ background: event.color }} />
+          <span
+            className={styles.categoryDot}
+            style={{ background: event.color }}
+          />
           <span className={styles.categoryLabel}>{event.categoryLabel}</span>
         </div>
         <ModalCloseButton onClick={onClose} label={t.close} />
@@ -61,5 +70,5 @@ export default function EventDetailModal({
         {event.joinLabel}
       </button>
     </Modal>
-  );
+  )
 }

@@ -78,10 +78,10 @@ now plain constants at the top of `lib/constants.ts` (`CONFIG`):
 
 ```ts
 export const CONFIG = {
-  defaultView: "month",   // "month" | "week"
-  weekStart: "sunday",    // "sunday" | "monday"
+  defaultView: "month", // "month" | "week"
+  weekStart: "sunday", // "sunday" | "monday"
   showEventPreviews: true,
-};
+}
 ```
 
 ## Fonts

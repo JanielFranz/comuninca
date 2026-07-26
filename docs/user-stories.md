@@ -7,10 +7,10 @@
 
 ## Roles
 
-| Role | Description |
-| --- | --- |
-| **Admin** | Trusted operator. Manages the user base, generates invite/access codes that allow new normal users to register, and views the total list of registered normal users. |
-| **Normal user** | Community member. Creates an account using an invite/access code provided by an admin, posts events, joins events, and browses the calendar. |
+| Role            | Description                                                                                                                                                          |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Admin**       | Trusted operator. Manages the user base, generates invite/access codes that allow new normal users to register, and views the total list of registered normal users. |
+| **Normal user** | Community member. Creates an account using an invite/access code provided by an admin, posts events, joins events, and browses the calendar.                         |
 
 ## Current state of the codebase
 
@@ -280,7 +280,6 @@ login,
   when the event is saved, then the link is stored with the event and shown to
   other users in the event detail (see US 3.4) so they can join the online
   session.
-
 
 ### US 3.2 — Join an event
 

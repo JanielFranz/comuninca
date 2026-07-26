@@ -27,22 +27,22 @@ onboarding, post/join/browse events). That work is tracked in
 
 ## 2. Repository map
 
-| File / folder | What it contains | When to read it |
-|---|---|---|
-| `feature_list.json` | Build tasks with status + dependencies (23 features, Phase 0–4) | Always, at the start |
-| `docs/user-stories.md` | Product spec: epics, user stories, acceptance criteria (US/AC) | When a feature is ambiguous |
-| `docs/technical-blueprint.md` | Stack, Prisma data model, auth/RBAC design, CI/CD, roadmap | When a feature is ambiguous |
-| `progress/current.md` | State of the current session | Always, at the start |
-| `progress/history.md` | Append-only log of past sessions | For historical context |
-| `.opencode/rules/architecture.md` | Layering, module map, boundaries (binding) | Before implementing |
-| `.opencode/rules/conventions.md` | TS / Next / Prisma / CSS-Modules style rules | Before writing code |
-| `.opencode/rules/verification.md` | How to prove work is functional | Before declaring `done` |
-| `CHECKPOINTS.md` | Objective "healthy final state" criteria | To self-assess |
-| `.opencode/agent/` | Agent definitions (leader, implementer, reviewer) | If orchestrating |
-| `opencode.json` | OpenCode config: default agent + permissions | Config changes |
-| `app/`, `components/`, `lib/` | Application code | For implementation |
-| `prisma/`, `supabase/` | Schema, migrations, SQL triggers (from feature #2/#4) | For DB work |
-| `tests/` | Vitest + Playwright suites (from features #5/#18/#22) | For verification |
+| File / folder                     | What it contains                                                | When to read it             |
+| --------------------------------- | --------------------------------------------------------------- | --------------------------- |
+| `feature_list.json`               | Build tasks with status + dependencies (23 features, Phase 0–4) | Always, at the start        |
+| `docs/user-stories.md`            | Product spec: epics, user stories, acceptance criteria (US/AC)  | When a feature is ambiguous |
+| `docs/technical-blueprint.md`     | Stack, Prisma data model, auth/RBAC design, CI/CD, roadmap      | When a feature is ambiguous |
+| `progress/current.md`             | State of the current session                                    | Always, at the start        |
+| `progress/history.md`             | Append-only log of past sessions                                | For historical context      |
+| `.opencode/rules/architecture.md` | Layering, module map, boundaries (binding)                      | Before implementing         |
+| `.opencode/rules/conventions.md`  | TS / Next / Prisma / CSS-Modules style rules                    | Before writing code         |
+| `.opencode/rules/verification.md` | How to prove work is functional                                 | Before declaring `done`     |
+| `CHECKPOINTS.md`                  | Objective "healthy final state" criteria                        | To self-assess              |
+| `.opencode/agent/`                | Agent definitions (leader, implementer, reviewer)               | If orchestrating            |
+| `opencode.json`                   | OpenCode config: default agent + permissions                    | Config changes              |
+| `app/`, `components/`, `lib/`     | Application code                                                | For implementation          |
+| `prisma/`, `supabase/`            | Schema, migrations, SQL triggers (from feature #2/#4)           | For DB work                 |
+| `tests/`                          | Vitest + Playwright suites (from features #5/#18/#22)           | For verification            |
 
 ## 3. Hard rules (non-negotiable)
 

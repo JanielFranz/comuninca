@@ -16,7 +16,7 @@
   `.opencode/agent/{leader,implementer,reviewer}.md` (OpenCode agent files:
   `mode` + `permission` frontmatter — the leader is a primary agent whose edit
   permission denies application-code edits), `.opencode/rules/{architecture,
-  conventions,verification}.md` (binding rules adapted from the Claude
+conventions,verification}.md` (binding rules adapted from the Claude
   versions: CSS Modules instead of Tailwind, `lib/strings.ts` copy rule,
   `lib/db.ts` / `lib/actions/*` / `lib/supabase/*` layering, offline test
   rule), and `opencode.json` (`default_agent: "leader"`, bash permissions for

@@ -1,13 +1,13 @@
-import type { CSSProperties, MouseEvent, ReactNode } from "react";
-import styles from "./Modal.module.css";
+import type { CSSProperties, MouseEvent, ReactNode } from "react"
+import styles from "./Modal.module.css"
 
 interface ModalProps {
-  onClose: () => void;
-  maxWidth: number;
-  maxHeight?: string;
-  zIndex?: number;
-  closeLabel: string;
-  children: ReactNode;
+  onClose: () => void
+  maxWidth: number
+  maxHeight?: string
+  zIndex?: number
+  closeLabel: string
+  children: ReactNode
 }
 
 export default function Modal({
@@ -19,27 +19,31 @@ export default function Modal({
   children,
 }: ModalProps) {
   function stopPropagation(e: MouseEvent) {
-    e.stopPropagation();
+    e.stopPropagation()
   }
 
-  const overlayStyle: CSSProperties = { zIndex };
-  const panelStyle: CSSProperties = { maxWidth, maxHeight };
+  const overlayStyle: CSSProperties = { zIndex }
+  const panelStyle: CSSProperties = { maxWidth, maxHeight }
 
   return (
     <div className={styles.overlay} style={overlayStyle} onClick={onClose}>
-      <div className={styles.panel} style={panelStyle} onClick={stopPropagation}>
+      <div
+        className={styles.panel}
+        style={panelStyle}
+        onClick={stopPropagation}
+      >
         {children}
       </div>
     </div>
-  );
+  )
 }
 
 export function ModalCloseButton({
   onClick,
   label,
 }: {
-  onClick: () => void;
-  label: string;
+  onClick: () => void
+  label: string
 }) {
   return (
     <button
@@ -50,5 +54,5 @@ export function ModalCloseButton({
     >
       ✕
     </button>
-  );
+  )
 }

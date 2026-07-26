@@ -66,12 +66,12 @@ Example instruction to a subagent:
 
 ## Effort scaling
 
-| Task complexity | Subagents | Notes |
-|---|---|---|
-| Trivial (1 file) | 1 implementer | no explorers |
-| Medium (2–3 files) | 1 implementer + 1 reviewer | |
+| Task complexity                       | Subagents                                  | Notes                |
+| ------------------------------------- | ------------------------------------------ | -------------------- |
+| Trivial (1 file)                      | 1 implementer                              | no explorers         |
+| Medium (2–3 files)                    | 1 implementer + 1 reviewer                 |                      |
 | Complex (cross-layer / atomic deploy) | 2–3 explorers → 1 implementer → 1 reviewer | plan the whole slice |
-| Very complex | split into sub-tasks, reapply the table | |
+| Very complex                          | split into sub-tasks, reapply the table    |                      |
 
 ## What you do NOT do
 

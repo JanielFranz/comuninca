@@ -38,7 +38,12 @@
       "phase": 0,
       "plan_ref": "Blueprint §3 (data model)",
       "depends_on": [1],
-      "paths": ["prisma/schema.prisma", "prisma/migrations/", "lib/db.ts", "package.json"],
+      "paths": [
+        "prisma/schema.prisma",
+        "prisma/migrations/",
+        "lib/db.ts",
+        "package.json"
+      ],
       "description": "Author prisma/schema.prisma exactly per Blueprint §3: User (id mirrors auth.users.id; email unique; role Role default USER; birthday?; profession?/occupation?/ikigai?; onboardingCompleted=false; createdAt; inviteCodeId unique), InviteCode (code unique; status InviteStatus UNUSED/USED/EXPIRED; createdAt; usedAt?; usedBy relation), Event (title; category String — TBD per US 3.1.1; date @db.Date; startTime/endTime 'HH:MM'; modality Modality IN_PERSON/VIRTUAL; location?; meetingUrl?; description; pictureUrl?; hostId; @@index([date])), EventAttendee (@@id([eventId, userId])). Enums: Role, InviteStatus, Modality. Run prisma migrate dev --name init against DIRECT_URL and commit prisma/migrations/ as the schema source of truth. Add db:generate, db:migrate, db:deploy, db:seed + postinstall (prisma generate) scripts. lib/db.ts exports a Prisma singleton on DATABASE_URL. Never db push.",
       "acceptance": [
         "prisma migrate status against DIRECT_URL reports no drift; prisma/migrations/init is committed",
@@ -54,13 +59,17 @@
       "phase": 0,
       "plan_ref": "Blueprint §4",
       "depends_on": [1],
-      "paths": ["lib/supabase/server.ts", "lib/supabase/client.ts", "lib/supabase/middleware.ts"],
+      "paths": [
+        "lib/supabase/server.ts",
+        "lib/supabase/client.ts",
+        "lib/supabase/middleware.ts"
+      ],
       "description": "Add the three @supabase/ssr client factories: server.ts (createServerClient bound to next/headers cookies() for Server Components/Actions), client.ts (createBrowserClient for client components), middleware.ts (updateSession helper consumed by root middleware.ts in feature 8). HARD RULE: implement ONLY getAll/setAll cookie methods (never the legacy get/set/remove). Server factories must never be imported from client components.",
       "acceptance": [
         "Server, browser, and middleware Supabase clients exist and use only getAll/setAll",
         "Factories type-check; server-only modules are marked/imported accordingly"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 4,
@@ -75,7 +84,7 @@
         "Signing up an auth user creates a public.User row with matching id/email and role USER",
         "Trigger SQL is version-controlled and applied to the Supabase project"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 5,
@@ -90,7 +99,7 @@
         "The verify workflow runs on a PR and is green",
         "A failing lint, typecheck, unit-test, or build step blocks the PR"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 6,
@@ -99,7 +108,12 @@
       "phase": 1,
       "plan_ref": "user-stories.md US 1.2, US 1.3",
       "depends_on": [3, 7],
-      "paths": ["app/(auth)/login/page.tsx", "lib/actions/auth.ts", "components/LoginScreen.tsx", "lib/strings.ts"],
+      "paths": [
+        "app/(auth)/login/page.tsx",
+        "lib/actions/auth.ts",
+        "components/LoginScreen.tsx",
+        "lib/strings.ts"
+      ],
       "description": "Replace the demo submitLogin (any credentials work) in CalendarApp.tsx with real auth. app/(auth)/login renders the existing LoginScreen UI (es-PE copy from lib/strings.ts) wired to a Server Action calling supabase.auth.signInWithPassword. On success read the user's role from public.User and redirect: ADMIN → /admin, USER → /calendar (onboarding gate arrives in feature 11). Wrong email OR password returns the SAME generic error (US 1.2.4 — never reveal which field). Logout from ProfileMenu calls signOut → /login (US 1.3.1). Server code authorizes via supabase.auth.getUser() (never getSession alone). Requires the dev seed (#7) — the seeded admin is the only account available to verify the ADMIN → /admin redirect, and seeded normal users verify USER → /calendar.",
       "acceptance": [
         "Valid credentials start a session; an admin lands on /admin and a normal user on /calendar",
@@ -146,7 +160,13 @@
       "phase": 1,
       "plan_ref": "user-stories.md US 2.2",
       "depends_on": [7, 8],
-      "paths": ["app/admin/codes/page.tsx", "components/admin/GenerateCodesModal.tsx", "lib/actions/invites.ts", "lib/validation/invites.ts", "lib/strings.ts"],
+      "paths": [
+        "app/admin/codes/page.tsx",
+        "components/admin/GenerateCodesModal.tsx",
+        "lib/actions/invites.ts",
+        "lib/validation/invites.ts",
+        "lib/strings.ts"
+      ],
       "description": "On /admin/codes, 'Generar código de invitación' opens a modal (reuse components/Modal.tsx). Step 1 asks how many codes to create — Zod-validated integer, min 1, max 50; invalid quantity disables the confirm action with a hint (AC 2.2.2). Server Action generateInviteCodes(count) requires admin and creates exactly count unique codes (crypto.randomBytes/nanoid, ≥128-bit entropy per US 4.1.4) with status UNUSED + createdAt. Step 2 (same modal, transitions in place) lists the newly generated codes with a 'copy all' action (full set in one click, confirmation shown, AC 2.2.4) and a per-row copy action (AC 2.2.5). Closing returns to the dashboard; codes persist for the list view (feature 13).",
       "acceptance": [
         "Popup asks for quantity; empty/zero/out-of-range quantity blocks generation with a hint",
@@ -163,7 +183,12 @@
       "phase": 1,
       "plan_ref": "user-stories.md US 1.1",
       "depends_on": [9],
-      "paths": ["app/(auth)/register/page.tsx", "lib/actions/auth.ts", "lib/validation/auth.ts", "lib/strings.ts"],
+      "paths": [
+        "app/(auth)/register/page.tsx",
+        "lib/actions/auth.ts",
+        "lib/validation/auth.ts",
+        "lib/strings.ts"
+      ],
       "description": "Register page (es-PE, copy in lib/strings.ts) with full name, email, password, and invite/access code — Zod registerSchema shared client/server. Server Action register: (1) code required (AC 1.1.2); (2) code must exist and be UNUSED (not USED/EXPIRED) (AC 1.1.3); (3) email not already registered (AC 1.1.6); (4) in ONE prisma.$transaction: supabase.auth.signUp → update the trigger-created public.User (fullName, inviteCodeId, role=USER — never ADMIN, AC 1.1.5) → mark the code USED with usedBy/usedAt (AC 2.2.7); any auth failure rolls the code consumption back. Success issues a session and redirects into the onboarding gate (feature 11).",
       "acceptance": [
         "Valid unused code + valid fields creates the account, consumes the code (USED + usedBy/usedAt), and starts a session",
@@ -180,7 +205,13 @@
       "phase": 1,
       "plan_ref": "user-stories.md US 1.4",
       "depends_on": [10],
-      "paths": ["app/onboarding/page.tsx", "lib/actions/onboarding.ts", "lib/validation/onboarding.ts", "middleware.ts", "lib/strings.ts"],
+      "paths": [
+        "app/onboarding/page.tsx",
+        "lib/actions/onboarding.ts",
+        "lib/validation/onboarding.ts",
+        "middleware.ts",
+        "lib/strings.ts"
+      ],
       "description": "Gate: middleware + Server Component check — an authenticated USER with onboardingCompleted=false is forced to /onboarding before reaching /calendar; admins never see it (AC 1.4.8). Form (es-PE, copy in lib/strings.ts per AC 1.4.9): Profesión optional, Ocupación mandatory, Ikigai optional (AC 1.4.2). Zod onboardingSchema enforces occupation required (AC 1.4.3). Submit persists the three fields, flips onboardingCompleted=true, and lands on /calendar (AC 1.4.4). The form cannot be dismissed/skipped without Ocupación (AC 1.4.6) and is never shown again once completed (AC 1.4.5).",
       "acceptance": [
         "First login lands on /onboarding; submitting with Ocupación empty is blocked with an error",
@@ -196,7 +227,12 @@
       "phase": 2,
       "plan_ref": "user-stories.md US 2.1 (+ US 1.4.7)",
       "depends_on": [8, 11],
-      "paths": ["app/admin/users/page.tsx", "components/admin/UsersTable.tsx", "lib/actions/admin.ts", "lib/strings.ts"],
+      "paths": [
+        "app/admin/users/page.tsx",
+        "components/admin/UsersTable.tsx",
+        "lib/actions/admin.ts",
+        "lib/strings.ts"
+      ],
       "description": "app/admin/users (admin-gated): Server Component queries User where role=USER. Columns: full name, email, registration date (createdAt, es-PE format), birthday, occupation, and the invite code used at sign-up (inviteCode.code); profession and ikigai available as columns or expandable row details (US 1.4.7). Total count header ('Total de usuarios: N', AC 2.1.3). Server-side pagination via searchParams (page size 20, AC 2.1.4). Search box filters by name/email server-side (AC 2.1.5). Non-admin access denied by middleware + action guard (AC 2.1.6).",
       "acceptance": [
         "The table lists all USER-role accounts with the columns above plus the total count",
@@ -212,7 +248,12 @@
       "phase": 2,
       "plan_ref": "user-stories.md US 2.3",
       "depends_on": [9],
-      "paths": ["app/admin/codes/page.tsx", "components/admin/CodesTable.tsx", "lib/actions/invites.ts", "lib/strings.ts"],
+      "paths": [
+        "app/admin/codes/page.tsx",
+        "components/admin/CodesTable.tsx",
+        "lib/actions/invites.ts",
+        "lib/strings.ts"
+      ],
       "description": "The /admin/codes list beneath the generate action: every InviteCode with a status badge — UNUSED shows 'Sin usar' (AC 2.3.2); USED shows the consuming user's name/email + usedAt in es-PE format (AC 2.3.1); EXPIRED (revoked) is visually distinct from active unused codes (AC 2.3.3). Add a revoke action on UNUSED codes (status → EXPIRED) so the revoked state is reachable and a revoked code can no longer register anyone (ties to US 1.1.3).",
       "acceptance": [
         "Used codes show consumer name/email + consumption date; unused show 'Sin usar'; expired/revoked are visually distinct",
@@ -227,7 +268,13 @@
       "phase": 3,
       "plan_ref": "Blueprint §5 (Epic 3) / user-stories.md US 3.3",
       "depends_on": [8],
-      "paths": ["app/calendar/page.tsx", "lib/actions/events.ts", "lib/selectors.ts", "lib/types.ts", "components/CalendarApp.tsx"],
+      "paths": [
+        "app/calendar/page.tsx",
+        "lib/actions/events.ts",
+        "lib/selectors.ts",
+        "lib/types.ts",
+        "components/CalendarApp.tsx"
+      ],
       "description": "Move the calendar from in-memory SEED_EVENTS to Postgres: app/calendar/page.tsx is a Server Component fetching events for the visible window (month or week, clamped to the ±3-month cap from feature 19) via Prisma (@@index([date])), including host + attendees. lib/types.ts CalendarEvent.hostId/attendeeIds now hold real user ids — drop the 'me' convention; buildActiveEvent resolves the current user from the session instead. CalendarApp keeps its UI state (modals, view toggle, day handling) but receives events + currentUser as props; MonthView/WeekView rendering stays as-is.",
       "acceptance": [
         "The calendar renders events from Postgres; SEED_EVENTS is no longer imported by app code",
@@ -242,7 +289,12 @@
       "phase": 3,
       "plan_ref": "user-stories.md US 3.1",
       "depends_on": [14],
-      "paths": ["components/AddEventModal.tsx", "lib/actions/events.ts", "lib/validation/events.ts", "lib/strings.ts"],
+      "paths": [
+        "components/AddEventModal.tsx",
+        "lib/actions/events.ts",
+        "lib/validation/events.ts",
+        "lib/strings.ts"
+      ],
       "description": "Wire AddEventModal to Server Action createEvent (requires user). Fields per AC 3.1.1: title, category (kept as the prototype's six options until the owner defines the final set), date, start/end time, modality (Presencial/Virtual selector), location, description, picture (feature 16). Zod eventSchema carries every rule with its es-PE message: all fields required — 'Todos los campos son obligatorios.' (AC 3.1.2); no past date (AC 3.1.5); today + already-passed start time blocked (AC 3.1.6); end must be after start (AC 3.1.7); Virtual ⇒ location NOT required and meetingUrl optional (AC 3.1.9); Presencial ⇒ location required (AC 3.1.10); meetingUrl persisted when provided (AC 3.1.11). Valid submit persists the event with the signed-in user as host, shows the 'Evento agregado al calendario' toast, closes the modal, and revalidates the calendar (AC 3.1.3). Empty-day and day-modal entry points keep pre-filling the date (AC 3.1.4).",
       "acceptance": [
         "Each invalid case (empty required field, past date, past start time today, end ≤ start, Presencial without address) shows its exact message and creates nothing",
@@ -258,7 +310,12 @@
       "phase": 3,
       "plan_ref": "user-stories.md US 3.1.1, US 3.4.4; Blueprint §1 (storage)",
       "depends_on": [15],
-      "paths": ["components/AddEventModal.tsx", "lib/storage.ts", "lib/actions/events.ts", "next.config.ts"],
+      "paths": [
+        "components/AddEventModal.tsx",
+        "lib/storage.ts",
+        "lib/actions/events.ts",
+        "next.config.ts"
+      ],
       "description": "Supabase Storage bucket event-pictures (public read). The form's picture input validates type (jpeg/png/webp) and byte size, resizes client-side (canvas) to the fixed dimensions the form defines, and the create action uploads it via the server client to event-pictures/<eventId>.<ext>, saving the public URL on Event.pictureUrl. next.config.ts whitelists the Supabase Storage host in images.remotePatterns for next/image.",
       "acceptance": [
         "An accepted picture is stored at the fixed size and its URL saved on the event",
@@ -290,7 +347,12 @@
       "phase": 3,
       "plan_ref": "user-stories.md AC 3.3.2, 3.3.12–3.3.15",
       "depends_on": [14],
-      "paths": ["lib/selectors.ts", "lib/types.ts", "components/WeekView.tsx", "tests/unit/week-overlap.test.ts"],
+      "paths": [
+        "lib/selectors.ts",
+        "lib/types.ts",
+        "components/WeekView.tsx",
+        "tests/unit/week-overlap.test.ts"
+      ],
       "description": "Fix the current WeekView stacking bug (blocks render with only top/height, so identical-time events overlap and hide each other). Extend buildWeekData with a pure interval-cluster packing pass: group each day's blocks into overlap clusters, assign each block a column index within its cluster, and return left/width percentages on WeekBlock. Identical start+end ⇒ equal fractions of the column width (AC 3.3.12); partial overlaps ⇒ side-by-side while intersecting (AC 3.3.13); enforce a minimum readable width so title (truncated if needed) + time label stay visible (AC 3.3.14); each card remains individually clickable and opens only its own detail modal (AC 3.3.15). Vitest covers: identical pair, triple overlap, chained partial overlaps, non-overlapping events.",
       "acceptance": [
         "Two identical-time events render side-by-side at equal width and each opens its own detail modal",
@@ -306,7 +368,11 @@
       "phase": 3,
       "plan_ref": "user-stories.md AC 3.3.5, 3.3.7–3.3.11",
       "depends_on": [14],
-      "paths": ["app/calendar/page.tsx", "components/Header.tsx", "lib/dateUtils.ts"],
+      "paths": [
+        "app/calendar/page.tsx",
+        "components/Header.tsx",
+        "lib/dateUtils.ts"
+      ],
       "description": "Bound calendar navigation to [current month − 3, current month + 3]: 'Anterior' is disabled (no-op) on the earliest allowed month and 'Siguiente' on the latest (AC 3.3.8/3.3.9); 'Hoy' always returns to the current period inside the window (AC 3.3.10). Week view applies the same boundary — a week fully outside the window cannot be navigated to (AC 3.3.11). The Server Component clamps out-of-range month/week URL params into the window instead of erroring.",
       "acceptance": [
         "Navigation past either edge is blocked/disabled; 'Hoy' snaps back into the window",
@@ -321,7 +387,11 @@
       "phase": 3,
       "plan_ref": "user-stories.md US 3.4",
       "depends_on": [16, 17],
-      "paths": ["components/EventDetailModal.tsx", "lib/selectors.ts", "lib/strings.ts"],
+      "paths": [
+        "components/EventDetailModal.tsx",
+        "lib/selectors.ts",
+        "lib/strings.ts"
+      ],
       "description": "EventDetailModal renders the full DB-backed event: category label + color, date + time range (es-PE), modality display — Presencial shows the physical address; Virtual shows a 'Virtual' label plus meetingUrl as a clickable link when provided (AC 3.4.1) — description, the uploaded picture at its fixed size (AC 3.4.4), host name/initials, and the attendee list with 'Nadie aún — sé el primero en unirte.' when empty (AC 3.4.2). Closes via Esc/close button/backdrop without losing calendar state (AC 3.4.3). Identical behavior from every entry point: week overlap card, day-modal item, month day (AC 3.4.5).",
       "acceptance": [
         "Virtual events show the 'Virtual' label + clickable link; Presencial events show the address",
@@ -352,7 +422,11 @@
       "phase": 4,
       "plan_ref": "Blueprint §1 (testing) / §7",
       "depends_on": [20, 5],
-      "paths": ["tests/e2e/", "playwright.config.ts", ".github/workflows/ci.yml"],
+      "paths": [
+        "tests/e2e/",
+        "playwright.config.ts",
+        ".github/workflows/ci.yml"
+      ],
       "description": "Playwright suite against a seeded preview/staging deploy: (1) register with a valid code → onboarding → calendar; (2) invalid / used / expired codes rejected; (3) admin login → generate codes → codes list shows them 'Sin usar' → users table lists the new user; (4) create event including each validation error and Virtual-without-address; (5) join/leave toggles and persists across reload; (6) RBAC: unauthenticated redirects to /login, USER blocked from /admin; (7) week-view overlap: two identical-time events both visible and individually clickable. Wire as a required CI check (pre-deploy or nightly cron per Blueprint §7).",
       "acceptance": [
         "The suite covers flows 1–7 and runs green in CI",

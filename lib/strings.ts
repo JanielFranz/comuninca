@@ -44,7 +44,8 @@ export const STRINGS = {
     descriptionLabel: "DESCRIPCIÓN",
     descriptionPlaceholder: "Agrega algunos detalles…",
     attendeesLabel: "INVITAR ASISTENTES",
-    validationError: "El título, la fecha y la hora de inicio son obligatorios.",
+    validationError:
+      "El título, la fecha y la hora de inicio son obligatorios.",
     cancel: "Cancelar",
     submit: "Agregar evento",
     toastSuccess: "Evento agregado al calendario",
@@ -66,4 +67,4 @@ export const STRINGS = {
   profileMenu: {
     logout: "Cerrar sesión",
   },
-} as const;
+} as const

@@ -1,20 +1,20 @@
-import type { CalendarView } from "@/lib/types";
-import { STRINGS } from "@/lib/strings";
-import styles from "./Header.module.css";
+import type { CalendarView } from "@/lib/types"
+import { STRINGS } from "@/lib/strings"
+import styles from "./Header.module.css"
 
 interface HeaderProps {
-  showWordmark: boolean;
-  headerLabel: string;
-  calendarView: CalendarView;
-  onPrev: () => void;
-  onNext: () => void;
-  onToday: () => void;
-  onSetMonthView: () => void;
-  onSetWeekView: () => void;
-  showAddButton: boolean;
-  onAddEventClick: () => void;
-  userInitials: string;
-  onToggleProfileMenu: () => void;
+  showWordmark: boolean
+  headerLabel: string
+  calendarView: CalendarView
+  onPrev: () => void
+  onNext: () => void
+  onToday: () => void
+  onSetMonthView: () => void
+  onSetWeekView: () => void
+  showAddButton: boolean
+  onAddEventClick: () => void
+  userInitials: string
+  onToggleProfileMenu: () => void
 }
 
 export default function Header({
@@ -31,14 +31,16 @@ export default function Header({
   userInitials,
   onToggleProfileMenu,
 }: HeaderProps) {
-  const t = STRINGS.header;
-  const isMonth = calendarView === "month";
+  const t = STRINGS.header
+  const isMonth = calendarView === "month"
 
   return (
     <header className={styles.header}>
       <div className={styles.brandRow}>
         <div className={styles.brandMark}>C</div>
-        {showWordmark && <div className={styles.brandName}>{STRINGS.meta.title}</div>}
+        {showWordmark && (
+          <div className={styles.brandName}>{STRINGS.meta.title}</div>
+        )}
       </div>
 
       <div className={styles.navGroup}>
@@ -52,7 +54,11 @@ export default function Header({
         <button onClick={onToday} className={styles.todayButton}>
           {t.today}
         </button>
-        <button onClick={onNext} aria-label={t.next} className={styles.navButton}>
+        <button
+          onClick={onNext}
+          aria-label={t.next}
+          className={styles.navButton}
+        >
           ›
         </button>
         <div className={styles.headerLabel}>{headerLabel}</div>
@@ -89,13 +95,10 @@ export default function Header({
           </button>
         )}
 
-        <button
-          onClick={onToggleProfileMenu}
-          className={styles.avatarButton}
-        >
+        <button onClick={onToggleProfileMenu} className={styles.avatarButton}>
           {userInitials}
         </button>
       </div>
     </header>
-  );
+  )
 }

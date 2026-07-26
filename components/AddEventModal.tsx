@@ -1,23 +1,28 @@
-import type { FormEvent } from "react";
-import type { AttendeeOption, CategoryKey, CategoryOption, EventFormState } from "@/lib/types";
-import { STRINGS } from "@/lib/strings";
-import Modal, { ModalCloseButton } from "./Modal";
-import styles from "./AddEventModal.module.css";
+import type { FormEvent } from "react"
+import type {
+  AttendeeOption,
+  CategoryKey,
+  CategoryOption,
+  EventFormState,
+} from "@/lib/types"
+import { STRINGS } from "@/lib/strings"
+import Modal, { ModalCloseButton } from "./Modal"
+import styles from "./AddEventModal.module.css"
 
 interface AddEventModalProps {
-  form: EventFormState;
-  categoryOptions: CategoryOption[];
-  attendeeOptions: AttendeeOption[];
-  onTitleChange: (value: string) => void;
-  onCategorySelect: (key: CategoryKey) => void;
-  onDateChange: (value: string) => void;
-  onStartChange: (value: string) => void;
-  onEndChange: (value: string) => void;
-  onLocationChange: (value: string) => void;
-  onDescriptionChange: (value: string) => void;
-  onAttendeeToggle: (id: string) => void;
-  onSubmit: (e: FormEvent) => void;
-  onClose: () => void;
+  form: EventFormState
+  categoryOptions: CategoryOption[]
+  attendeeOptions: AttendeeOption[]
+  onTitleChange: (value: string) => void
+  onCategorySelect: (key: CategoryKey) => void
+  onDateChange: (value: string) => void
+  onStartChange: (value: string) => void
+  onEndChange: (value: string) => void
+  onLocationChange: (value: string) => void
+  onDescriptionChange: (value: string) => void
+  onAttendeeToggle: (id: string) => void
+  onSubmit: (e: FormEvent) => void
+  onClose: () => void
 }
 
 export default function AddEventModal({
@@ -35,10 +40,16 @@ export default function AddEventModal({
   onSubmit,
   onClose,
 }: AddEventModalProps) {
-  const t = STRINGS.addEventModal;
+  const t = STRINGS.addEventModal
 
   return (
-    <Modal onClose={onClose} maxWidth={480} maxHeight="88vh" zIndex={100} closeLabel={t.close}>
+    <Modal
+      onClose={onClose}
+      maxWidth={480}
+      maxHeight="88vh"
+      zIndex={100}
+      closeLabel={t.close}
+    >
       <div className={styles.headerRow}>
         <div className={styles.title}>{t.title}</div>
         <ModalCloseButton onClick={onClose} label={t.close} />
@@ -71,7 +82,10 @@ export default function AddEventModal({
                 color: opt.textColor,
               }}
             >
-              <span className={styles.pillDot} style={{ background: opt.dot }} />
+              <span
+                className={styles.pillDot}
+                style={{ background: opt.dot }}
+              />
               {opt.label}
             </button>
           ))}
@@ -163,7 +177,11 @@ export default function AddEventModal({
         {form.error && <div className={styles.error}>{form.error}</div>}
 
         <div className={styles.buttonRow}>
-          <button type="button" onClick={onClose} className={styles.cancelButton}>
+          <button
+            type="button"
+            onClick={onClose}
+            className={styles.cancelButton}
+          >
             {t.cancel}
           </button>
           <button type="submit" className={styles.submitButton}>
@@ -172,5 +190,5 @@ export default function AddEventModal({
         </div>
       </form>
     </Modal>
-  );
+  )
 }

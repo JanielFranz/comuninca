@@ -45,19 +45,23 @@ Write a single block to `progress/review_<feature>.md`:
 
 ```markdown
 # Review — feature <id> <name>
+
 **Verdict:** APPROVED | CHANGES_REQUESTED
 
 ## Acceptance criteria
+
 - "<criterion>" → met / not met (evidence: …)
 
 ## Checkpoints
+
 - C1: [x]
 - C2: [x]
-- C3: [ ]  ← Reason: components/admin/UsersTable.tsx imports prisma directly (layering)
+- C3: [ ] ← Reason: components/admin/UsersTable.tsx imports prisma directly (layering)
 - C4: [x]
 - C5: [x]
 
 ## Required changes (if any)
+
 1. Move the Prisma call out of the component into a server action.
 2. …
 ```

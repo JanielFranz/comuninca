@@ -5,6 +5,7 @@ binding map; the authoritative product specs live in `docs/`. Keep this in
 sync with them.
 
 > Source-of-truth documents (read these when a detail is ambiguous):
+>
 > - `docs/user-stories.md` — epics, user stories, acceptance criteria
 >   (US/AC numbering).
 > - `docs/technical-blueprint.md` — stack choices, Prisma data model, auth/RBAC
@@ -15,20 +16,20 @@ sync with them.
 
 ## 1. Stack (binding)
 
-| Layer | Choice | Notes |
-|---|---|---|
-| Framework | Next.js 16 App Router | React 19, Server Components by default |
-| Language | TypeScript 5 (strict) | `@/*` path alias → repo root |
-| Package manager | **pnpm only** | never `npm`/`yarn`; lockfile is `pnpm-lock.yaml` |
-| DB | **Supabase Postgres** | managed Postgres + Auth + Storage |
-| ORM | Prisma | client built once in `lib/db.ts`; migrations only |
-| Auth | Supabase Auth + `@supabase/ssr` | cookie sessions; factories in `lib/supabase/*` |
-| Storage | Supabase Storage | bucket `event-pictures` |
-| Validation | Zod + react-hook-form | schemas shared in `lib/validation/` |
-| Styling | **CSS Modules** | co-located `*.module.css` per component — no Tailwind |
-| Copy / i18n | `lib/strings.ts` | all user-facing copy, es-PE |
-| Tests | Vitest (unit) + Playwright (E2E) | see `verification.md` |
-| CI/CD | GitHub Actions → Vercel | see `docs/technical-blueprint.md` §7 |
+| Layer           | Choice                           | Notes                                                 |
+| --------------- | -------------------------------- | ----------------------------------------------------- |
+| Framework       | Next.js 16 App Router            | React 19, Server Components by default                |
+| Language        | TypeScript 5 (strict)            | `@/*` path alias → repo root                          |
+| Package manager | **pnpm only**                    | never `npm`/`yarn`; lockfile is `pnpm-lock.yaml`      |
+| DB              | **Supabase Postgres**            | managed Postgres + Auth + Storage                     |
+| ORM             | Prisma                           | client built once in `lib/db.ts`; migrations only     |
+| Auth            | Supabase Auth + `@supabase/ssr`  | cookie sessions; factories in `lib/supabase/*`        |
+| Storage         | Supabase Storage                 | bucket `event-pictures`                               |
+| Validation      | Zod + react-hook-form            | schemas shared in `lib/validation/`                   |
+| Styling         | **CSS Modules**                  | co-located `*.module.css` per component — no Tailwind |
+| Copy / i18n     | `lib/strings.ts`                 | all user-facing copy, es-PE                           |
+| Tests           | Vitest (unit) + Playwright (E2E) | see `verification.md`                                 |
+| CI/CD           | GitHub Actions → Vercel          | see `docs/technical-blueprint.md` §7                  |
 
 Do not substitute an alternative for any binding choice without updating this
 table and the relevant rules file.

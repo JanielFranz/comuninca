@@ -1,4 +1,4 @@
-import type { CategoryKey, CategoryMeta, User, CalendarEvent } from "./types";
+import type { CategoryKey, CategoryMeta, User, CalendarEvent } from "./types"
 
 export const CATEGORY_META: Record<CategoryKey, CategoryMeta> = {
   social: { label: "Social", color: "#E8AC3E" },
@@ -7,7 +7,7 @@ export const CATEGORY_META: Record<CategoryKey, CategoryMeta> = {
   sports: { label: "Deportes", color: "#7FB07A" },
   food: { label: "Comida y Mercado", color: "#D98B4A" },
   networking: { label: "Networking", color: "#A480B8" },
-};
+}
 
 export const CATEGORY_ORDER: CategoryKey[] = [
   "social",
@@ -16,30 +16,30 @@ export const CATEGORY_ORDER: CategoryKey[] = [
   "sports",
   "food",
   "networking",
-];
+]
 
 export const USERS: User[] = [
   { id: "u1", name: "Ava Reyes", initials: "AR" },
   { id: "u2", name: "Marco Tanaka", initials: "MT" },
   { id: "u3", name: "Priya Kapoor", initials: "PK" },
   { id: "u4", name: "Jonas Berg", initials: "JB" },
-];
+]
 
 export function findUser(id: string): User | undefined {
-  return USERS.find((u) => u.id === id);
+  return USERS.find((u) => u.id === id)
 }
 
 // Fixed reference date so the seed data lines up exactly like the original
 // demo (today = 17 de julio de 2026).
-export const TODAY = new Date(2026, 6, 17);
+export const TODAY = new Date(2026, 6, 17)
 
-export const MOBILE_BREAKPOINT = 720;
-export const TINY_BREAKPOINT = 420;
-export const WEEK_START_HOUR = 6;
-export const WEEK_END_HOUR = 24;
-export const HOUR_PX = 56;
+export const MOBILE_BREAKPOINT = 720
+export const TINY_BREAKPOINT = 420
+export const WEEK_START_HOUR = 6
+export const WEEK_END_HOUR = 24
+export const HOUR_PX = 56
 // Simulated "current time" used to draw the now-line in week view (2:30 p.m.).
-export const DEMO_NOW_MIN = 14 * 60 + 30;
+export const DEMO_NOW_MIN = 14 * 60 + 30
 
 // Equivalent to the original component's configurable props. Adjust here if
 // you want the app to default to week view, a Monday week start, etc.
@@ -47,9 +47,9 @@ export const CONFIG = {
   defaultView: "month" as "month" | "week",
   weekStart: "sunday" as "sunday" | "monday",
   showEventPreviews: true,
-};
+}
 
-export const WEEKDAY_SHORT = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
+export const WEEKDAY_SHORT = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"]
 
 export const SEED_EVENTS: CalendarEvent[] = [
   {
@@ -86,7 +86,8 @@ export const SEED_EVENTS: CalendarEvent[] = [
     startTime: "16:00",
     endTime: "17:30",
     location: "Cancha Greenway 2",
-    description: "Pichanga semanal, todos los niveles de juego son bienvenidos.",
+    description:
+      "Pichanga semanal, todos los niveles de juego son bienvenidos.",
     hostId: "u4",
     attendeeIds: ["u1"],
   },
@@ -161,7 +162,8 @@ export const SEED_EVENTS: CalendarEvent[] = [
     startTime: "18:00",
     endTime: "20:00",
     location: "The Hub Coworking",
-    description: "Presentaciones rápidas seguidas de networking libre y bebidas.",
+    description:
+      "Presentaciones rápidas seguidas de networking libre y bebidas.",
     hostId: "u2",
     attendeeIds: ["u1", "u3", "u4"],
   },
@@ -173,7 +175,8 @@ export const SEED_EVENTS: CalendarEvent[] = [
     startTime: "11:00",
     endTime: "13:00",
     location: "Estudio Clay & Co",
-    description: "Prueba el torno por primera vez, no se necesita experiencia previa.",
+    description:
+      "Prueba el torno por primera vez, no se necesita experiencia previa.",
     hostId: "u1",
     attendeeIds: ["u2"],
   },
@@ -185,7 +188,8 @@ export const SEED_EVENTS: CalendarEvent[] = [
     startTime: "09:00",
     endTime: "11:00",
     location: "Punto de encuentro: Parque Elm Street",
-    description: "Guantes y bolsas incluidos. Ayúdanos a mantener limpio el barrio.",
+    description:
+      "Guantes y bolsas incluidos. Ayúdanos a mantener limpio el barrio.",
     hostId: "u3",
     attendeeIds: ["u1", "u2", "u4"],
   },
@@ -202,4 +206,4 @@ export const SEED_EVENTS: CalendarEvent[] = [
     hostId: "u4",
     attendeeIds: ["u1", "u2", "u3"],
   },
-];
+]

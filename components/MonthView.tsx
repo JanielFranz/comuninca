@@ -1,15 +1,19 @@
-import type { CSSProperties } from "react";
-import type { MonthCell } from "@/lib/types";
-import { STRINGS } from "@/lib/strings";
-import styles from "./MonthView.module.css";
+import type { CSSProperties } from "react"
+import type { MonthCell } from "@/lib/types"
+import { STRINGS } from "@/lib/strings"
+import styles from "./MonthView.module.css"
 
 interface MonthViewProps {
-  weekdayLabels: string[];
-  cells: MonthCell[];
-  onCellClick: (dateStr: string, hasEvents: boolean) => void;
+  weekdayLabels: string[]
+  cells: MonthCell[]
+  onCellClick: (dateStr: string, hasEvents: boolean) => void
 }
 
-export default function MonthView({ weekdayLabels, cells, onCellClick }: MonthViewProps) {
+export default function MonthView({
+  weekdayLabels,
+  cells,
+  onCellClick,
+}: MonthViewProps) {
   return (
     <div className={styles.wrapper}>
       <div className={styles.weekdayRow}>
@@ -24,7 +28,7 @@ export default function MonthView({ weekdayLabels, cells, onCellClick }: MonthVi
           const cellVars = {
             "--cell-bg": cell.cellBg,
             "--cell-opacity": cell.cellOpacity,
-          } as CSSProperties;
+          } as CSSProperties
           return (
             <div
               key={cell.key}
@@ -55,7 +59,9 @@ export default function MonthView({ weekdayLabels, cells, onCellClick }: MonthVi
               ))}
 
               {cell.hasMore && (
-                <div className={styles.more}>{STRINGS.monthView.more(cell.moreCount)}</div>
+                <div className={styles.more}>
+                  {STRINGS.monthView.more(cell.moreCount)}
+                </div>
               )}
 
               {cell.hasDotsOnly && (
@@ -70,9 +76,9 @@ export default function MonthView({ weekdayLabels, cells, onCellClick }: MonthVi
                 </div>
               )}
             </div>
-          );
+          )
         })}
       </div>
     </div>
-  );
+  )
 }

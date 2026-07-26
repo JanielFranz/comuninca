@@ -1,15 +1,15 @@
-import type { FormEvent } from "react";
-import { STRINGS } from "@/lib/strings";
-import styles from "./LoginScreen.module.css";
+import type { FormEvent } from "react"
+import { STRINGS } from "@/lib/strings"
+import styles from "./LoginScreen.module.css"
 
 interface LoginScreenProps {
-  email: string;
-  password: string;
-  error: string;
-  isLoggingIn: boolean;
-  onEmailChange: (value: string) => void;
-  onPasswordChange: (value: string) => void;
-  onSubmit: (e: FormEvent) => void;
+  email: string
+  password: string
+  error: string
+  isLoggingIn: boolean
+  onEmailChange: (value: string) => void
+  onPasswordChange: (value: string) => void
+  onSubmit: (e: FormEvent) => void
 }
 
 export default function LoginScreen({
@@ -21,7 +21,7 @@ export default function LoginScreen({
   onPasswordChange,
   onSubmit,
 }: LoginScreenProps) {
-  const t = STRINGS.login;
+  const t = STRINGS.login
 
   return (
     <div className={styles.wrapper}>
@@ -78,5 +78,5 @@ export default function LoginScreen({
         </div>
       </div>
     </div>
-  );
+  )
 }

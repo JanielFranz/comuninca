@@ -1,14 +1,14 @@
-import type { DayModalEventView } from "@/lib/types";
-import { STRINGS } from "@/lib/strings";
-import Modal, { ModalCloseButton } from "./Modal";
-import styles from "./DayModal.module.css";
+import type { DayModalEventView } from "@/lib/types"
+import { STRINGS } from "@/lib/strings"
+import Modal, { ModalCloseButton } from "./Modal"
+import styles from "./DayModal.module.css"
 
 interface DayModalProps {
-  label: string;
-  events: DayModalEventView[];
-  onEventClick: (id: string) => void;
-  onAddEvent: () => void;
-  onClose: () => void;
+  label: string
+  events: DayModalEventView[]
+  onEventClick: (id: string) => void
+  onAddEvent: () => void
+  onClose: () => void
 }
 
 export default function DayModal({
@@ -18,10 +18,16 @@ export default function DayModal({
   onAddEvent,
   onClose,
 }: DayModalProps) {
-  const t = STRINGS.dayModal;
+  const t = STRINGS.dayModal
 
   return (
-    <Modal onClose={onClose} maxWidth={420} maxHeight="82vh" zIndex={100} closeLabel={t.close}>
+    <Modal
+      onClose={onClose}
+      maxWidth={420}
+      maxHeight="82vh"
+      zIndex={100}
+      closeLabel={t.close}
+    >
       <div className={styles.headerRow}>
         <div className={styles.title}>{label}</div>
         <ModalCloseButton onClick={onClose} label={t.close} />
@@ -49,5 +55,5 @@ export default function DayModal({
         {t.addOnThisDay}
       </button>
     </Modal>
-  );
+  )
 }
