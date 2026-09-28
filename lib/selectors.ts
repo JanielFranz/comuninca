@@ -16,12 +16,9 @@ import {
   CATEGORY_ORDER,
   DEMO_NOW_MIN,
   HOUR_PX,
-  TODAY,
-  USERS,
   WEEKDAY_SHORT,
   WEEK_END_HOUR,
   WEEK_START_HOUR,
-  findUser,
 } from "./constants"
 import {
   addDays,
@@ -35,6 +32,11 @@ import {
   to12h,
 } from "./dateUtils"
 import { STRINGS } from "./strings"
+
+/** Accepts the reference "today" as a Date or an ISO "YYYY-MM-DD" key. */
+function toToday(today: Date | string): Date {
+  return typeof today === "string" ? parseDateKey(today) : today
+}
 
 export function getEventsForDate(
   events: CalendarEvent[],
@@ -54,12 +56,14 @@ export function weekdayLabels(weekStart: WeekStart): string[] {
 
 export function buildMonthCells(params: {
   currentDate: Date
+  today: Date | string
   events: CalendarEvent[]
   weekStart: WeekStart
   isMobile: boolean
   showEventPreviews: boolean
 }): MonthCell[] {
   const { currentDate, events, weekStart, isMobile, showEventPreviews } = params
+  const today = toToday(params.today)
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
   const firstOfMonth = new Date(year, month, 1)
@@ -76,7 +80,7 @@ export function buildMonthCells(params: {
     const key = dateKey(d)
     const dayEvents = getEventsForDate(events, key)
     const inMonth = d.getMonth() === month
-    const isToday = sameDay(d, TODAY)
+    const isToday = sameDay(d, today)
     const previews = allowPreviews ? dayEvents.slice(0, 2) : []
     const dots = !allowPreviews
       ? dayEvents.slice(0, 4).map((e) => CATEGORY_META[e.category].color)
@@ -110,21 +114,139 @@ export function buildMonthCells(params: {
   return cells
 }
 
+/**
+ * Per-day interval-graph column packing for overlapping week-view blocks
+ * (feature #18, AC 3.3.12–3.3.15).
+ *
+ * Algorithm (classic interval-graph greedy column assignment, run once per
+ * connected component of transitively-overlapping blocks so the whole group
+ * shares one `totalColumns`):
+ *  1. Sort the day's blocks by start time, tie-broken by `id` for a
+ *     deterministic, stable order across renders of identical input.
+ *  2. Compute connected components of the "time ranges intersect" relation
+ *     via union-find. Overlap is strict: `a.startMin < b.endMin &&
+ *     a.endMin > b.startMin` — a block that only touches another (A ends
+ *     exactly when B starts) does not overlap it. Connectivity is transitive:
+ *     chained partial overlaps (A-B overlap, B-C overlap, A-C don't) land in
+ *     one component.
+ *  3. Within each component (still in start-time order), sweep and assign
+ *     each block the lowest-numbered column not held by a still-active
+ *     block (a block is active while its end is still greater than the
+ *     current block's start). This greedy sweep is optimal for interval
+ *     graphs: the running peak of simultaneously active columns equals the
+ *     graph's chromatic number.
+ *  4. `totalColumns` for a component = the peak simultaneous-column count
+ *     observed during its sweep; every block in the component shares that
+ *     value. `width = 100 / totalColumns` (a solitary block gets
+ *     `totalColumns = 1`, i.e. full width); `left = column * width`, so
+ *     columns tile edge-to-edge with no gap.
+ *
+ * Minimum-readable-width decision (AC 3.3.14): exact equal-percentage
+ * division always, with CSS truncation (`.blockTitle`/`.blockTime`
+ * ellipsis + the block's own `overflow: hidden`) keeping the title/time
+ * readable at narrow widths, rather than capping column count and letting
+ * extra columns partially overlap a floor width. At the realistic event
+ * density this app supports (a handful of events per day), a day column is
+ * roughly 120-180px wide in the existing grid, so even a 4-way split still
+ * leaves ~30-45px per card — enough for a truncated title line — and this
+ * keeps the packing math exact and simple instead of introducing a second,
+ * harder-to-verify degrade path for a case that in practice rarely triggers.
+ */
+function computeOverlapLayout(
+  blocks: { id: string; startMin: number; endMin: number }[],
+): Map<string, { left: number; width: number }> {
+  const layout = new Map<string, { left: number; width: number }>()
+  if (blocks.length === 0) return layout
+
+  const sorted = [...blocks].sort((a, b) =>
+    a.startMin !== b.startMin
+      ? a.startMin - b.startMin
+      : a.id < b.id
+        ? -1
+        : a.id > b.id
+          ? 1
+          : 0,
+  )
+
+  const overlaps = (
+    a: (typeof sorted)[number],
+    b: (typeof sorted)[number],
+  ): boolean => a.startMin < b.endMin && a.endMin > b.startMin
+
+  // Union-find over the (transitive) overlap relation.
+  const parent = new Map<string, string>(sorted.map((b) => [b.id, b.id]))
+  const find = (id: string): string => {
+    let root = id
+    while (parent.get(root) !== root) root = parent.get(root) as string
+    let cur = id
+    while (parent.get(cur) !== root) {
+      const next = parent.get(cur) as string
+      parent.set(cur, root)
+      cur = next
+    }
+    return root
+  }
+  const union = (a: string, b: string) => {
+    const ra = find(a)
+    const rb = find(b)
+    if (ra !== rb) parent.set(ra, rb)
+  }
+  for (let i = 0; i < sorted.length; i++) {
+    for (let j = i + 1; j < sorted.length; j++) {
+      if (overlaps(sorted[i], sorted[j])) union(sorted[i].id, sorted[j].id)
+    }
+  }
+
+  const components = new Map<string, typeof sorted>()
+  for (const b of sorted) {
+    const root = find(b.id)
+    const list = components.get(root)
+    if (list) list.push(b)
+    else components.set(root, [b])
+  }
+
+  for (const comp of components.values()) {
+    const active: { endMin: number; column: number }[] = []
+    const columnOf = new Map<string, number>()
+    let totalColumns = 0
+    for (const b of comp) {
+      for (let k = active.length - 1; k >= 0; k--) {
+        if (active[k].endMin <= b.startMin) active.splice(k, 1)
+      }
+      const used = new Set(active.map((a) => a.column))
+      let column = 0
+      while (used.has(column)) column++
+      columnOf.set(b.id, column)
+      active.push({ endMin: b.endMin, column })
+      totalColumns = Math.max(totalColumns, active.length)
+    }
+    const width = 100 / totalColumns
+    for (const b of comp) {
+      const column = columnOf.get(b.id) as number
+      layout.set(b.id, { left: column * width, width })
+    }
+  }
+
+  return layout
+}
+
 export function buildWeekData(params: {
   currentDate: Date
+  today: Date | string
   events: CalendarEvent[]
   weekStart: WeekStart
 }): WeekData {
   const { currentDate, events, weekStart } = params
+  const today = toToday(params.today)
   const start = startOfWeek(currentDate, weekStart)
   const days = []
 
   for (let i = 0; i < 7; i++) {
     const d = addDays(start, i)
     const key = dateKey(d)
-    const isToday = sameDay(d, TODAY)
+    const isToday = sameDay(d, today)
     const dayEvents = getEventsForDate(events, key)
-    const blocks = dayEvents.map((e) => {
+    const rawBlocks = dayEvents.map((e) => {
       const meta = CATEGORY_META[e.category]
       const startMin = timeToMinutes(e.startTime) - WEEK_START_HOUR * 60
       const endMin = timeToMinutes(e.endTime) - WEEK_START_HOUR * 60
@@ -138,6 +260,29 @@ export function buildWeekData(params: {
         timeLabel: `${to12h(e.startTime)} – ${to12h(e.endTime)}`,
         top,
         height,
+        startMin,
+        endMin,
+      }
+    })
+    const layout = computeOverlapLayout(
+      rawBlocks.map((b) => ({
+        id: b.id,
+        startMin: b.startMin,
+        endMin: b.endMin,
+      })),
+    )
+    const blocks = rawBlocks.map((b) => {
+      const pos = layout.get(b.id) ?? { left: 0, width: 100 }
+      return {
+        id: b.id,
+        title: b.title,
+        color: b.color,
+        bg: b.bg,
+        timeLabel: b.timeLabel,
+        top: b.top,
+        height: b.height,
+        left: pos.left,
+        width: pos.width,
       }
     })
     days.push({
@@ -182,8 +327,11 @@ export function buildCategoryOptions(
   })
 }
 
-export function buildAttendeeOptions(selectedIds: string[]): AttendeeOption[] {
-  return USERS.map((u: User) => {
+export function buildAttendeeOptions(
+  selectedIds: string[],
+  people: User[],
+): AttendeeOption[] {
+  return people.map((u: User) => {
     const selected = selectedIds.indexOf(u.id) >= 0
     return {
       id: u.id,
@@ -216,6 +364,7 @@ export function buildDayModalEvents(
 export function buildActiveEvent(
   events: CalendarEvent[],
   activeEventId: string | null,
+  people: User[],
   currentUser: CurrentUser | null,
 ): ActiveEventView {
   const ev = events.find((e) => e.id === activeEventId)
@@ -232,6 +381,9 @@ export function buildActiveEvent(
       timeLabel: "",
       location: "",
       description: "",
+      pictureUrl: null,
+      modality: "IN_PERSON",
+      meetingUrl: null,
       hostInitials: "",
       hostName: "",
       attendees: [],
@@ -245,18 +397,20 @@ export function buildActiveEvent(
   }
 
   const meta = CATEGORY_META[ev.category]
-  const hostIsMe = ev.hostId === "me"
-  const host = hostIsMe
-    ? currentUser || { name: "Tú", initials: "YO" }
-    : findUser(ev.hostId) || { name: "Desconocido", initials: "?" }
+  const me = currentUser
+    ? { id: currentUser.id, name: currentUser.name, initials: currentUser.initials }
+    : null
+  const resolve = (id: string): User | undefined =>
+    me && id === me.id ? me : people.find((u) => u.id === id)
+  const hostIsMe = Boolean(me) && ev.hostId === me?.id
+  const host = resolve(ev.hostId) ?? {
+    name: t.unknownHost,
+    initials: t.unknownHostInitials,
+  }
   const attendees = ev.attendeeIds
-    .map((id) =>
-      id === "me"
-        ? currentUser || { name: "Tú", initials: "YO" }
-        : findUser(id),
-    )
-    .filter((u): u is User | CurrentUser => Boolean(u))
-  const isGoing = ev.attendeeIds.indexOf("me") >= 0
+    .map(resolve)
+    .filter((u): u is User => Boolean(u))
+  const isGoing = Boolean(me) && ev.attendeeIds.indexOf(me?.id ?? "") >= 0
   const d = parseDateKey(ev.date)
 
   return {
@@ -269,8 +423,11 @@ export function buildActiveEvent(
     timeLabel: `${to12h(ev.startTime)} – ${to12h(ev.endTime)}`,
     location: ev.location || t.locationTBA,
     description: ev.description || t.noDescription,
+    pictureUrl: ev.pictureUrl,
+    modality: ev.modality,
+    meetingUrl: ev.meetingUrl,
     hostInitials: host.initials,
-    hostName: hostIsMe ? "Tú" : host.name,
+    hostName: hostIsMe ? STRINGS.fallbackUserName : host.name,
     attendees: attendees.map((a) => ({ initials: a.initials })),
     attendeeCount: attendees.length,
     noAttendees: attendees.length === 0,

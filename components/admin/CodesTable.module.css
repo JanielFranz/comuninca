@@ -1,0 +1,90 @@
+.scroll {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-panel);
+}
+
+.table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 14px;
+  text-align: left;
+}
+
+.caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.table th {
+  padding: 12px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-muted);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 12px 14px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.mono {
+  font-family: ui-monospace, monospace;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.revokedCode {
+  color: var(--color-muted);
+  text-decoration: line-through;
+}
+
+.revokedText {
+  color: var(--color-error);
+}
+
+.break {
+  overflow-wrap: anywhere;
+}
+
+.muted {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badgeUnused {
+  color: var(--color-accent);
+}
+
+.badgeUsed {
+  color: var(--color-muted);
+}
+
+.badgeRevoked {
+  color: var(--color-error);
+  border-style: dashed;
+}

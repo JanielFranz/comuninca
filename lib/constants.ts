@@ -51,7 +51,13 @@ export const CONFIG = {
 
 export const WEEKDAY_SHORT = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"]
 
-export const SEED_EVENTS: CalendarEvent[] = [
+/** Prototype seed shape (no modality/meeting/picture); consumed by prisma/seed-data.ts only. */
+export type SeedEvent = Omit<
+  CalendarEvent,
+  "modality" | "meetingUrl" | "pictureUrl"
+>
+
+export const SEED_EVENTS: SeedEvent[] = [
   {
     id: "ev1",
     title: "Feria de Productores",

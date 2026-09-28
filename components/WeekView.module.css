@@ -63,8 +63,15 @@
 
 .block {
   position: absolute;
-  left: 3px;
-  right: 3px;
+  box-sizing: border-box;
+  /* Left/width are set inline per-block from feature #18's overlap-packing
+     percentages, each wrapped in calc() with a +2px/-4px gutter baked in
+     directly (see WeekView.tsx) so the painted box's right edge for the
+     right-most column of a split lands at exactly
+     left% + width% - 2px = 100% - 2px — 2px INSIDE the day column's own
+     right edge, never past it. A plain CSS `margin` cannot do this: margin
+     always sits outside the border box regardless of `box-sizing`, so with
+     no `right` set it would paint 2px past 100% on the open side. */
   border-radius: 8px;
   padding: 5px 7px;
   overflow: hidden;
@@ -85,6 +92,8 @@
   font-size: 10px;
   color: rgba(255, 255, 255, 0.75);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .nowLine {

@@ -3,22 +3,19 @@
 > Cleared when each session closes; its summary moves to `history.md`. While
 > working, **keep this updated in real time**, not at the end.
 
-- **Feature in progress:** #5 — `ci_verify_pipeline`
-- **Date:** 2026-07-25
+- **Feature in progress:** _none_
+- **Date:** _—_
 
 ## Plan
 
-1. Create `.github/workflows/ci.yml` — verify job (checkout → Node 22 + pnpm → install → prisma validate/generate → lint → prettier → tsc → vitest → build)
-2. Add `test`, `format:check`, `format` scripts to `package.json`
-3. Create `.eslintrc.json` with `next/core-web-vitals` so `pnpm lint` works
-4. Create `.prettierrc` and `.prettierignore`
-5. Run `bash init.sh` → must be green
-6. Write report to `progress/impl_ci_verify_pipeline.md`
+_—_
 
 ## Log
 
-- 2026-07-25 — Feature #5 started; reading existing configs and feature spec.
+_—_
 
 ## Environment notes
 
-- Same as previous session — Git Bash, pnpm, Prisma schema exists from #2
+- pnpm 11.x. Next 16.2.11 (`proxy.ts`). Hosted Supabase only. Server clock for "today" is America/Lima.
+- Next 16.2.11 refuses a second `next dev` in the same repo directory regardless of port; reuse the running one or use `next start` on another port.
+- User asked to work through #17-#20; all four done and live-verified. Stopped here per instruction.

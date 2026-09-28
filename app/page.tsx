@@ -1,5 +1,8 @@
-import CalendarApp from "@/components/CalendarApp"
+import { redirect } from "next/navigation"
+import { getCurrentUser } from "@/lib/currentUser"
 
-export default function Home() {
-  return <CalendarApp />
+export default async function Home() {
+  const user = await getCurrentUser()
+  if (!user) redirect("/login")
+  redirect(user.role === "ADMIN" ? "/admin" : "/calendar")
 }

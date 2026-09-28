@@ -9,6 +9,9 @@ interface HeaderProps {
   onPrev: () => void
   onNext: () => void
   onToday: () => void
+  /** Feature #19: disabled when Prev/Next would be a no-op at the ±3-month navigation window's edge. */
+  isPrevDisabled: boolean
+  isNextDisabled: boolean
   onSetMonthView: () => void
   onSetWeekView: () => void
   showAddButton: boolean
@@ -24,6 +27,8 @@ export default function Header({
   onPrev,
   onNext,
   onToday,
+  isPrevDisabled,
+  isNextDisabled,
   onSetMonthView,
   onSetWeekView,
   showAddButton,
@@ -46,6 +51,7 @@ export default function Header({
       <div className={styles.navGroup}>
         <button
           onClick={onPrev}
+          disabled={isPrevDisabled}
           aria-label={t.previous}
           className={styles.navButton}
         >
@@ -56,6 +62,7 @@ export default function Header({
         </button>
         <button
           onClick={onNext}
+          disabled={isNextDisabled}
           aria-label={t.next}
           className={styles.navButton}
         >

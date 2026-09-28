@@ -15,7 +15,7 @@
 | Database             | **Supabase (managed Postgres)**                                          | Managed Postgres + Auth + Storage in one service; generous free tier for a community app.                                                                                                                         |
 | ORM                  | **Prisma v7.7.0**                                                        | Typed schema/migrations for all app tables (users, invite codes, events, attendees); `prisma generate` gives end-to-end type safety.                                                                              |
 | Auth                 | **Supabase Auth** (email/password)                                       | Handles hashing (bcrypt), sessions, JWTs out of the box (US 4.1.4). Pairs with `@supabase/ssr` for cookie sessions in App Router.                                                                                 |
-| Authorization (RBAC) | **`role` column on `users` + Next.js middleware + Server Action guards** | Middleware redirects unauthenticated/forbidden routes (US 1.2, US 2.1.6); every Server Action re-checks the role server-side (defense in depth).                                                                  |
+| Authorization (RBAC) | **`role` column on `users` + Next.js proxy (`proxy.ts`, formerly middleware) + Server Action guards** | The proxy redirects unauthenticated/forbidden routes (US 1.2, US 2.1.6); every Server Action re-checks the role server-side (defense in depth).                                                                  |
 | File storage         | **Supabase Storage** (bucket: `event-pictures`)                          | Event picture uploads (US 3.1.1); fixed size enforced by client-side resize before upload; served via `next/image` remote patterns.                                                                               |
 | Validation           | **Zod** (shared client/server schemas)                                   | One schema per form (register, onboarding, invite generation, event create) reused by react-hook-form on the client and Server Actions on the server — single source of truth for all the AC validation messages. |
 | Forms                | **react-hook-form + @hookform/resolvers**                                | Ergonomic form state for the multi-field register/onboarding/event forms; Zod resolver maps errors to fields.                                                                                                     |
@@ -51,7 +51,7 @@
 
 **Request flow**
 
-1. **Middleware** (`middleware.ts`) runs first: refreshes the Supabase session cookie, redirects unauthenticated users away from protected routes, and keeps normal users out of `/admin/*` (US 2.1.6).
+1. **Proxy** (`proxy.ts`, the Next 16 name for middleware) runs first: refreshes the Supabase session cookie, redirects unauthenticated users away from protected routes, and keeps normal users out of `/admin/*` (US 2.1.6).
 2. **Server Components** read data through Prisma directly (users table, events for the visible month/week window).
 3. **Mutations** (register, generate codes, create/join event, onboarding) go through **Server Actions** in `lib/actions/`, each of which: verifies the session, checks the role, validates input with Zod, executes via Prisma, and revalidates the affected route.
 4. **Prisma** talks to Supabase Postgres over `DATABASE_URL` (connection pooler) for runtime and `DIRECT_URL` for migrations.
@@ -218,7 +218,7 @@ tests/
   e2e/                            # Playwright: auth flow, admin flow, events
 .github/workflows/
   ci.yml
-middleware.ts                     # session refresh + RBAC gates
+proxy.ts                          # session refresh + RBAC gates
 ```
 
 ---
@@ -243,7 +243,7 @@ middleware.ts                     # session refresh + RBAC gates
 2. Vercel deployment (native Git integration handles preview builds per PR; the production deploy can ride on Vercel's integration or run via `vercel deploy --prod` in the job)
 3. Optional: Playwright E2E suite as a nightly cron job
 
-**Secrets** (GitHub repo settings): `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `VERCEL_TOKEN`.
+**Secrets** (GitHub repo settings): `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `VERCEL_TOKEN`.
 
 ---
 
@@ -254,8 +254,8 @@ middleware.ts                     # session refresh + RBAC gates
 DATABASE_URL=...        # Supabase pooled connection (pgBouncer) — runtime
 DIRECT_URL=...          # Supabase direct connection — migrations
 NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...   # server-only (Server Actions)
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
+SUPABASE_SECRET_KEY=...   # server-only (Server Actions)
 ```
 
 ---

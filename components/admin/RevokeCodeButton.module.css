@@ -1,0 +1,47 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 240px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.prompt {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.secondary,
+.danger {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid rgba(140, 140, 140, 0.35);
+}
+
+.danger {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.secondary:disabled,
+.danger:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-error);
+}

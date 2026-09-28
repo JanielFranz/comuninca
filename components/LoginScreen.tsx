@@ -1,27 +1,44 @@
+"use client"
+
+import { useState, useTransition } from "react"
 import type { FormEvent } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { signIn } from "@/lib/actions/auth"
 import { STRINGS } from "@/lib/strings"
 import styles from "./LoginScreen.module.css"
 
-interface LoginScreenProps {
-  email: string
-  password: string
-  error: string
-  isLoggingIn: boolean
-  onEmailChange: (value: string) => void
-  onPasswordChange: (value: string) => void
-  onSubmit: (e: FormEvent) => void
-}
-
-export default function LoginScreen({
-  email,
-  password,
-  error,
-  isLoggingIn,
-  onEmailChange,
-  onPasswordChange,
-  onSubmit,
-}: LoginScreenProps) {
+export default function LoginScreen() {
   const t = STRINGS.login
+  const router = useRouter()
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [isPending, startTransition] = useTransition()
+
+  function onSubmit(e: FormEvent) {
+    e.preventDefault()
+    if (!email.trim() || !password) {
+      setError(t.missingFieldsError)
+      return
+    }
+    setError("")
+    startTransition(async () => {
+      const result = await signIn({ email, password })
+      if (result.ok) {
+        router.push(result.redirectTo)
+        router.refresh()
+        return
+      }
+      setError(
+        result.error === "INVALID_CREDENTIALS"
+          ? t.invalidCredentialsError
+          : result.error === "INVALID_INPUT"
+            ? t.missingFieldsError
+            : t.unexpectedError,
+      )
+    })
+  }
 
   return (
     <div className={styles.wrapper}>
@@ -35,15 +52,19 @@ export default function LoginScreen({
           <div className={styles.title}>{t.welcome}</div>
           <div className={styles.subtitle}>{t.subtitle}</div>
 
-          <form onSubmit={onSubmit}>
+          <form onSubmit={onSubmit} noValidate>
             <label className={styles.label} htmlFor="login-email">
               {t.emailLabel}
             </label>
             <input
               id="login-email"
-              type="text"
+              type="email"
+              autoComplete="email"
               value={email}
-              onChange={(e) => onEmailChange(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value)
+                setError("")
+              }}
               placeholder={t.emailPlaceholder}
               className={styles.input}
             />
@@ -54,16 +75,28 @@ export default function LoginScreen({
             <input
               id="login-password"
               type="password"
+              autoComplete="current-password"
               value={password}
-              onChange={(e) => onPasswordChange(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value)
+                setError("")
+              }}
               placeholder={t.passwordPlaceholder}
               className={styles.passwordInput}
             />
 
-            {error && <div className={styles.error}>{error}</div>}
+            {error && (
+              <div className={styles.error} role="alert">
+                {error}
+              </div>
+            )}
 
-            <button type="submit" className={styles.submit}>
-              {isLoggingIn ? (
+            <button
+              type="submit"
+              className={styles.submit}
+              disabled={isPending}
+            >
+              {isPending ? (
                 <>
                   <span className={styles.spinner} />
                   <span>{t.signingIn}</span>
@@ -74,7 +107,9 @@ export default function LoginScreen({
             </button>
           </form>
 
-          <div className={styles.demoTip}>{t.demoTip}</div>
+          <Link href="/register" className={styles.footerLink}>
+            {t.registerLink}
+          </Link>
         </div>
       </div>
     </div>

@@ -23,7 +23,7 @@
       "plan_ref": "Blueprint Phase 0 / §8",
       "depends_on": [],
       "paths": [".env.example", ".gitignore", "package.json"],
-      "description": "Create the Supabase project (Postgres + Auth + Storage). Wire env vars per Blueprint §8: DATABASE_URL (pgBouncer pooled, runtime), DIRECT_URL (direct, migrations), NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (server-only, never in client code). Track .env.example with every key empty-valued; keep .env* ignored. Install runtime deps: prisma, @prisma/client, @supabase/ssr, @supabase/supabase-js, zod, react-hook-form, @hookform/resolvers; dev deps: vitest, prettier.",
+      "description": "Create the Supabase project (Postgres + Auth + Storage). Wire env vars per Blueprint §8: DATABASE_URL (pgBouncer pooled, runtime), DIRECT_URL (direct, migrations), NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY (server-only, never in client code). Track .env.example with every key empty-valued; keep .env* ignored. Install runtime deps: prisma, @prisma/client, @supabase/ssr, @supabase/supabase-js, zod, react-hook-form, @hookform/resolvers; dev deps: vitest, prettier.",
       "acceptance": [
         ".env.example lists every variable with empty values; no real secret in any tracked file",
         "Both DATABASE_URL (pooled) and DIRECT_URL (direct) connect to the Supabase Postgres",
@@ -120,7 +120,7 @@
         "Invalid credentials show one generic error message",
         "Cerrar sesión ends the session and returns to /login"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 7,
@@ -135,23 +135,23 @@
         "pnpm db:seed is idempotent (safe to re-run)",
         "Local login works with the seeded admin; UNUSED codes and the 12 events exist in Postgres"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 8,
       "name": "rbac_middleware_and_guards",
-      "title": "middleware.ts route protection + action guards",
+      "title": "proxy.ts route protection + action guards",
       "phase": 1,
       "plan_ref": "user-stories.md US 2.1.6, US 4.1.1–4.1.2; Blueprint §4",
       "depends_on": [6],
-      "paths": ["middleware.ts", "lib/auth.ts"],
-      "description": "Root middleware.ts matching /calendar, /admin/:path*, /onboarding: refresh the Supabase session cookie via updateSession (feature 3), redirect unauthenticated users to /login, and redirect non-admin sessions away from /admin/* to /calendar. Exclude /login, /register, /auth/*, and static assets from the matcher. lib/auth.ts exports requireUser() (getUser → session + public.User row; redirect /login when absent) and requireAdmin() (role check → deny/redirect) — EVERY Server Action re-verifies the role server-side (defense in depth; middleware is never the only gate).",
+      "paths": ["proxy.ts", "lib/auth.ts"],
+      "description": "Root proxy.ts (Next 16 renamed middleware.ts; export `proxy`) matching /calendar, /admin/:path*, /onboarding: refresh the Supabase session cookie via updateSession (feature 3), redirect unauthenticated users to /login, and redirect non-admin sessions away from /admin/* to /calendar. Exclude /login, /register, /auth/*, and static assets from the matcher. lib/auth.ts exports requireUser() (getUser → session + public.User row; redirect /login when absent) and requireAdmin() (role check → deny/redirect) — EVERY Server Action re-verifies the role server-side (defense in depth; middleware is never the only gate).",
       "acceptance": [
         "Unauthenticated /calendar, /admin/*, /onboarding redirect to /login",
         "A USER-role session hitting /admin/* is redirected away",
         "requireUser/requireAdmin are unit-tested and consumed by subsequent actions"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 9,
@@ -174,7 +174,7 @@
         "'Copy all' copies the whole set in a single click and per-row copy copies one code; both show a confirmation",
         "Each code is persisted with its string, UNUSED status, and creation date"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 10,
@@ -196,7 +196,7 @@
         "The created account role is always USER",
         "A second registration attempt with the same code is rejected"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 11,
@@ -209,16 +209,16 @@
         "app/onboarding/page.tsx",
         "lib/actions/onboarding.ts",
         "lib/validation/onboarding.ts",
-        "middleware.ts",
+        "proxy.ts",
         "lib/strings.ts"
       ],
-      "description": "Gate: middleware + Server Component check — an authenticated USER with onboardingCompleted=false is forced to /onboarding before reaching /calendar; admins never see it (AC 1.4.8). Form (es-PE, copy in lib/strings.ts per AC 1.4.9): Profesión optional, Ocupación mandatory, Ikigai optional (AC 1.4.2). Zod onboardingSchema enforces occupation required (AC 1.4.3). Submit persists the three fields, flips onboardingCompleted=true, and lands on /calendar (AC 1.4.4). The form cannot be dismissed/skipped without Ocupación (AC 1.4.6) and is never shown again once completed (AC 1.4.5).",
+      "description": "Gate: proxy + Server Component check — an authenticated USER with onboardingCompleted=false is forced to /onboarding before reaching /calendar; admins never see it (AC 1.4.8). Form (es-PE, copy in lib/strings.ts per AC 1.4.9): Profesión optional, Ocupación mandatory, Ikigai optional (AC 1.4.2). Zod onboardingSchema enforces occupation required (AC 1.4.3). Submit persists the three fields, flips onboardingCompleted=true, and lands on /calendar (AC 1.4.4). The form cannot be dismissed/skipped without Ocupación (AC 1.4.6) and is never shown again once completed (AC 1.4.5).",
       "acceptance": [
         "First login lands on /onboarding; submitting with Ocupación empty is blocked with an error",
         "Valid submit persists all three fields, flips the flag, and lands on /calendar",
         "Subsequent logins skip the form; admins never see it; navigating to /calendar with the flag false redirects back to /onboarding"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 12,
@@ -239,7 +239,7 @@
         "Pagination reaches every user; search filters by name/email",
         "A non-admin or unauthenticated visitor cannot load the page"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 13,
@@ -259,7 +259,7 @@
         "Used codes show consumer name/email + consumption date; unused show 'Sin usar'; expired/revoked are visually distinct",
         "Revoking an unused code flips it to EXPIRED and registration with it is rejected"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 14,
@@ -280,7 +280,7 @@
         "The calendar renders events from Postgres; SEED_EVENTS is no longer imported by app code",
         "Month and week views show the seeded events exactly like the prototype did"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 15,
@@ -301,7 +301,7 @@
         "Virtual without an address succeeds with no location stored; Virtual with a link stores meetingUrl",
         "Valid submit creates the event with hostId = current user, shows the success toast, and the event appears on the calendar"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 16,
@@ -312,8 +312,11 @@
       "depends_on": [15],
       "paths": [
         "components/AddEventModal.tsx",
+        "components/EventDetailModal.tsx",
+        "lib/selectors.ts",
         "lib/storage.ts",
         "lib/actions/events.ts",
+        "lib/types.ts",
         "next.config.ts"
       ],
       "description": "Supabase Storage bucket event-pictures (public read). The form's picture input validates type (jpeg/png/webp) and byte size, resizes client-side (canvas) to the fixed dimensions the form defines, and the create action uploads it via the server client to event-pictures/<eventId>.<ext>, saving the public URL on Event.pictureUrl. next.config.ts whitelists the Supabase Storage host in images.remotePatterns for next/image.",
@@ -322,7 +325,7 @@
         "Oversized or unsupported files are rejected before upload with a typed error",
         "next/image renders the stored picture"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 17,
@@ -338,7 +341,7 @@
         "Attendee count and list update after each toggle",
         "Re-joining an already-joined event never duplicates the attendee"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 18,
@@ -359,7 +362,7 @@
         "Partial overlaps never fully hide a card; title + time stay readable",
         "Unit tests cover the clustering cases"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 19,
@@ -378,7 +381,7 @@
         "Navigation past either edge is blocked/disabled; 'Hoy' snaps back into the window",
         "Week view respects the same boundary; an out-of-range URL param is clamped, not a 500"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 20,
@@ -398,7 +401,7 @@
         "The picture renders at the fixed size; an empty attendee list shows the empty-state copy",
         "Opening from any entry point shows the same full modal with working join/leave"
       ],
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": 21,
@@ -442,7 +445,7 @@
       "plan_ref": "Blueprint §7 (job deploy)",
       "depends_on": [5],
       "paths": [".github/workflows/ci.yml", "vercel.json", ".env.example"],
-      "description": "Job `deploy` on merge to main (needs verify): prisma migrate deploy against production DIRECT_URL from the CI/release step — never migrate dev / db push in prod, never inside next build — then Vercel production deploy. Vercel env scoping: preview → staging Supabase, production → prod Supabase; mark DATABASE_URL, DIRECT_URL, and SUPABASE_SERVICE_ROLE_KEY as Sensitive. GitHub secrets per Blueprint §7 (DATABASE_URL, DIRECT_URL, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, VERCEL_TOKEN).",
+      "description": "Job `deploy` on merge to main (needs verify): prisma migrate deploy against production DIRECT_URL from the CI/release step — never migrate dev / db push in prod, never inside next build — then Vercel production deploy. Vercel env scoping: preview → staging Supabase, production → prod Supabase; mark DATABASE_URL, DIRECT_URL, and SUPABASE_SECRET_KEY as Sensitive. GitHub secrets per Blueprint §7 (DATABASE_URL, DIRECT_URL, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY, VERCEL_TOKEN).",
       "acceptance": [
         "Merging to main applies migrations and deploys production; preview PRs hit staging — the two never cross",
         "migrate deploy runs from the release step; migrate status shows no drift"

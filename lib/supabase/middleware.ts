@@ -1,12 +1,16 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
+/**
+ * Refreshes the Supabase session cookie and returns the response carrying the
+ * refreshed cookies plus the server-validated auth user (or null).
+ */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
       cookies: {
         getAll() {
@@ -25,8 +29,8 @@ export async function updateSession(request: NextRequest) {
     },
   )
 
-  // Refresh the auth session
-  await supabase.auth.getUser()
+  // Refresh the auth session (getUser validates the JWT with Supabase Auth)
+  const { data } = await supabase.auth.getUser()
 
-  return supabaseResponse
+  return { response: supabaseResponse, user: data.user }
 }

@@ -62,6 +62,15 @@
   background: rgba(140, 140, 140, 0.15);
 }
 
+.navButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.navButton:disabled:hover {
+  background: transparent;
+}
+
 .todayButton {
   padding: 8px 14px;
   border-radius: 9px;

@@ -49,6 +49,8 @@ export default function WeekView({ weekData, onEventClick }: WeekViewProps) {
                 style={{
                   top: `${b.top}px`,
                   height: `${b.height}px`,
+                  left: `calc(${b.left}% + 2px)`,
+                  width: `calc(${b.width}% - 4px)`,
                   background: b.bg,
                   borderLeftColor: b.color,
                 }}

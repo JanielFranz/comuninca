@@ -1,9 +1,10 @@
+import { useRef } from "react"
 import type { FormEvent } from "react"
 import type {
-  AttendeeOption,
   CategoryKey,
   CategoryOption,
   EventFormState,
+  EventModality,
 } from "@/lib/types"
 import { STRINGS } from "@/lib/strings"
 import Modal, { ModalCloseButton } from "./Modal"
@@ -12,15 +13,17 @@ import styles from "./AddEventModal.module.css"
 interface AddEventModalProps {
   form: EventFormState
   categoryOptions: CategoryOption[]
-  attendeeOptions: AttendeeOption[]
+  isPending: boolean
   onTitleChange: (value: string) => void
   onCategorySelect: (key: CategoryKey) => void
   onDateChange: (value: string) => void
   onStartChange: (value: string) => void
   onEndChange: (value: string) => void
+  onModalityChange: (value: EventModality) => void
   onLocationChange: (value: string) => void
   onDescriptionChange: (value: string) => void
-  onAttendeeToggle: (id: string) => void
+  /** A picture was selected (resize/validation runs immediately); null clears it. */
+  onPictureSelect: (file: File | null) => void
   onSubmit: (e: FormEvent) => void
   onClose: () => void
 }
@@ -28,19 +31,28 @@ interface AddEventModalProps {
 export default function AddEventModal({
   form,
   categoryOptions,
-  attendeeOptions,
+  isPending,
   onTitleChange,
   onCategorySelect,
   onDateChange,
   onStartChange,
   onEndChange,
+  onModalityChange,
   onLocationChange,
   onDescriptionChange,
-  onAttendeeToggle,
+  onPictureSelect,
   onSubmit,
   onClose,
 }: AddEventModalProps) {
   const t = STRINGS.addEventModal
+  const isVirtual = form.modality === "VIRTUAL"
+  const modalities: { value: EventModality; label: string }[] = [
+    { value: "IN_PERSON", label: t.modalityInPerson },
+    { value: "VIRTUAL", label: t.modalityVirtual },
+  ]
+  const pictureBusy =
+    form.pictureStatus === "processing" || form.pictureStatus === "error"
+  const pictureInputRef = useRef<HTMLInputElement>(null)
 
   return (
     <Modal
@@ -55,7 +67,7 @@ export default function AddEventModal({
         <ModalCloseButton onClick={onClose} label={t.close} />
       </div>
 
-      <form onSubmit={onSubmit}>
+      <form onSubmit={onSubmit} noValidate>
         <label className={styles.label} htmlFor="event-title">
           {t.titleLabel}
         </label>
@@ -130,15 +142,40 @@ export default function AddEventModal({
           </div>
         </div>
 
+        <div id="event-modality-label" className={styles.labelSpaced}>
+          {t.modalityLabel}
+        </div>
+        <div
+          role="radiogroup"
+          aria-labelledby="event-modality-label"
+          className={styles.modalityRow}
+        >
+          {modalities.map((m) => (
+            <label key={m.value} className={styles.modalityOption}>
+              <input
+                type="radio"
+                name="event-modality"
+                value={m.value}
+                checked={form.modality === m.value}
+                onChange={() => onModalityChange(m.value)}
+                className={styles.modalityRadio}
+              />
+              <span className={styles.modalityText}>{m.label}</span>
+            </label>
+          ))}
+        </div>
+
         <label className={styles.label} htmlFor="event-location">
-          {t.locationLabel}
+          {isVirtual ? t.meetingUrlLabel : t.locationLabel}
         </label>
         <input
           id="event-location"
-          type="text"
+          type={isVirtual ? "url" : "text"}
           value={form.location}
           onChange={(e) => onLocationChange(e.target.value)}
-          placeholder={t.locationPlaceholder}
+          placeholder={
+            isVirtual ? t.meetingUrlPlaceholder : t.locationPlaceholder
+          }
           className={styles.textInput}
         />
 
@@ -154,27 +191,55 @@ export default function AddEventModal({
           className={styles.textarea}
         />
 
-        <label className={styles.labelSpaced}>{t.attendeesLabel}</label>
-        <div className={styles.attendeeRow}>
-          {attendeeOptions.map((a) => (
+        <label className={styles.label} htmlFor="event-picture">
+          {t.pictureLabel}
+        </label>
+        <input
+          id="event-picture"
+          ref={pictureInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={(e) => onPictureSelect(e.target.files?.[0] ?? null)}
+          disabled={form.pictureStatus === "processing"}
+          className={styles.fileInput}
+        />
+        {form.pictureStatus === "processing" && (
+          <div className={styles.pictureHint} role="status">
+            {t.pictureProcessing}
+          </div>
+        )}
+        {form.picturePreviewUrl && (
+          <div className={styles.picturePreviewRow}>
+            {/* Selected-file preview; not the final resized upload, so a
+                plain <img> (not next/image) at a fixed-aspect-ratio box. */}
+            <img
+              src={form.picturePreviewUrl}
+              alt=""
+              className={styles.picturePreview}
+            />
             <button
-              key={a.id}
               type="button"
-              onClick={() => onAttendeeToggle(a.id)}
-              className={styles.attendeePill}
-              style={{
-                background: a.bg,
-                borderColor: a.border,
-                color: a.textColor,
+              onClick={() => {
+                if (pictureInputRef.current) pictureInputRef.current.value = ""
+                onPictureSelect(null)
               }}
+              className={styles.pictureRemoveButton}
             >
-              <span className={styles.attendeeAvatar}>{a.initials}</span>
-              {a.name}
+              {t.pictureRemove}
             </button>
-          ))}
-        </div>
+          </div>
+        )}
+        {form.pictureError && (
+          <div className={styles.error} role="alert">
+            {form.pictureError}
+          </div>
+        )}
 
-        {form.error && <div className={styles.error}>{form.error}</div>}
+        {form.error && (
+          <div className={styles.error} role="alert">
+            {form.error}
+          </div>
+        )}
 
         <div className={styles.buttonRow}>
           <button
@@ -184,8 +249,13 @@ export default function AddEventModal({
           >
             {t.cancel}
           </button>
-          <button type="submit" className={styles.submitButton}>
-            {t.submit}
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={isPending || pictureBusy}
+            aria-busy={isPending}
+          >
+            {isPending ? t.submitting : t.submit}
           </button>
         </div>
       </form>

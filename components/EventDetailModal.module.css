@@ -25,6 +25,20 @@
   color: var(--color-text);
 }
 
+.pictureWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 960 / 540;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  background: var(--color-bg);
+}
+
+.picture {
+  object-fit: cover;
+}
+
 .title {
   font-family: var(--font-display);
   font-weight: 700;
@@ -42,6 +56,11 @@
   font-size: 13.5px;
   color: var(--color-muted);
   margin-bottom: 16px;
+}
+
+.meetingLink {
+  color: var(--color-accent);
+  text-decoration: underline;
 }
 
 .description {
@@ -118,4 +137,15 @@
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
+}
+
+.joinButton:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.joinError {
+  color: var(--color-error);
+  font-size: 13px;
+  margin: 10px 0 0;
 }

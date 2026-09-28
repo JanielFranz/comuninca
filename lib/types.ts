@@ -16,6 +16,8 @@ export interface CurrentUser extends User {
   email: string
 }
 
+export type EventModality = "IN_PERSON" | "VIRTUAL"
+
 export interface CalendarEvent {
   id: string
   title: string
@@ -26,12 +28,20 @@ export interface CalendarEvent {
   startTime: string
   /** "HH:MM" 24h */
   endTime: string
+  /** Empty string when the event has no physical location. */
   location: string
   description: string
-  /** "me" for the signed-in user, otherwise a User["id"] */
+  /** Carried for features #15/#16/#20; not rendered yet. */
+  modality: EventModality
+  meetingUrl: string | null
+  pictureUrl: string | null
+  /** Real User["id"] of the host. */
   hostId: string
+  /** Real User["id"]s of the attendees. */
   attendeeIds: string[]
 }
+
+export type PictureStatus = "idle" | "processing" | "ready" | "error"
 
 export interface EventFormState {
   title: string
@@ -39,15 +49,23 @@ export interface EventFormState {
   date: string
   startTime: string
   endTime: string
+  modality: EventModality
+  /** One input: the address (Presencial) or the optional meeting link (Virtual). */
   location: string
   description: string
-  attendeeIds: string[]
   error: string
+  /** Base64 `data:image/jpeg;base64,...` URL once resized; "" when none (feature #16). */
+  picture: string
+  /** es-PE message for a picture-specific problem; "" when none. */
+  pictureError: string
+  /** Client-side picture pipeline state; "processing"/"error" block submission. */
+  pictureStatus: PictureStatus
+  /** Object URL for the thumbnail preview; "" when none. Revoked when replaced/cleared. */
+  picturePreviewUrl: string
 }
 
 export type CalendarView = "month" | "week"
 export type WeekStart = "sunday" | "monday"
-export type Screen = "login" | "calendar"
 
 // ---- View-model shapes returned by lib/selectors.ts ----
 
@@ -77,6 +95,10 @@ export interface WeekBlock {
   timeLabel: string
   top: number
   height: number
+  /** CSS percentage (0-100): horizontal offset within the day column, for side-by-side overlap layout (feature #18). */
+  left: number
+  /** CSS percentage (0-100): horizontal width within the day column, for side-by-side overlap layout (feature #18). */
+  width: number
 }
 
 export interface WeekDayColumn {
@@ -138,6 +160,12 @@ export interface ActiveEventView {
   timeLabel: string
   location: string
   description: string
+  /** Public Storage URL of the uploaded picture, or null when none (feature #16). */
+  pictureUrl: string | null
+  /** Direct pass-through from CalendarEvent; decides which location branch renders (feature #20). */
+  modality: EventModality
+  /** Virtual only; null for IN_PERSON or when no link was provided (feature #20). */
+  meetingUrl: string | null
   hostInitials: string
   hostName: string
   attendees: { initials: string }[]

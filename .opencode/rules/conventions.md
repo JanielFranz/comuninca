@@ -89,7 +89,7 @@ dev`); never `db push` against Supabase, never `migrate dev` in production
 
 ## 7. Secrets & environment
 
-- Server secrets (`SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, `DIRECT_URL`)
+- Server secrets (`SUPABASE_SECRET_KEY`, `DATABASE_URL`, `DIRECT_URL`)
   are read server-side only, **never** defaulted in code, **never**
   referenced from a client component, and **never** logged. Only
   `NEXT_PUBLIC_*` is browser-safe.

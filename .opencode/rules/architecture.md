@@ -52,8 +52,8 @@ React components ─▶ Server Actions (lib/actions/*) ─▶ lib/db.ts ─▶ S
   mutation path: `auth.ts`, `onboarding.ts`, `invites.ts`, `events.ts`,
   `admin.ts`. Every action **self-authorizes** via `lib/auth.ts`
   (`requireUser` / `requireAdmin`) — a Server Action can be invoked directly,
-  so `middleware.ts` is not a substitute for an in-action guard.
-- **`middleware.ts`** — session refresh (`updateSession` from
+  so `proxy.ts` is not a substitute for an in-action guard.
+- **`proxy.ts`** — session refresh (`updateSession` from
   `lib/supabase/middleware.ts`) + route gates: unauthenticated → `/login`;
   non-admin → away from `/admin/*`; USER with `onboardingCompleted=false` →
   `/onboarding`.
@@ -81,7 +81,7 @@ design error — stop and report.
 
 - **Persistence only through `lib/db.ts`.** Never `new PrismaClient()`
   elsewhere. Components never touch the DB; they receive data as props.
-- **Secrets are server-only.** `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`,
+- **Secrets are server-only.** `SUPABASE_SECRET_KEY`, `DATABASE_URL`,
   `DIRECT_URL` are never referenced from a client component and never
   defaulted in code. Only `NEXT_PUBLIC_*` may reach the browser. See the env
   table in Blueprint §8.
