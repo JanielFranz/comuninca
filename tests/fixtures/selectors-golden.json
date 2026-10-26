@@ -184,12 +184,12 @@
         {
           "id": "ev5",
           "title": "Yoga en el Parque",
-          "color": "#7FB07A"
+          "color": "#4FB0A5"
         },
         {
           "id": "ev6",
           "title": "Noche de Jam con Guitarra",
-          "color": "#E0708A"
+          "color": "#4FB0A5"
         }
       ],
       "hasMore": false,
@@ -365,7 +365,7 @@
         {
           "id": "ev2",
           "title": "Social en la Azotea al Atardecer",
-          "color": "#E8AC3E"
+          "color": "#4FB0A5"
         }
       ],
       "hasMore": false,
@@ -388,7 +388,7 @@
         {
           "id": "ev3",
           "title": "Fútbol 5 Amistoso",
-          "color": "#7FB07A"
+          "color": "#4FB0A5"
         }
       ],
       "hasMore": false,
@@ -445,7 +445,7 @@
         {
           "id": "ev8",
           "title": "Sesión de Jazz en Vivo",
-          "color": "#E0708A"
+          "color": "#4FB0A5"
         }
       ],
       "hasMore": false,
@@ -502,7 +502,7 @@
         {
           "id": "ev10",
           "title": "Clase de Prueba de Cerámica",
-          "color": "#6E9CC4"
+          "color": "#E8AC3E"
         },
         {
           "id": "ev9",
@@ -581,7 +581,7 @@
         {
           "id": "ev11",
           "title": "Día de Limpieza Comunitaria",
-          "color": "#E8AC3E"
+          "color": "#7FB07A"
         }
       ],
       "hasMore": false,
@@ -638,7 +638,7 @@
         {
           "id": "ev12",
           "title": "Fiesta de Verano en la Cuadra",
-          "color": "#E8AC3E"
+          "color": "#4FB0A5"
         }
       ],
       "hasMore": false,
@@ -970,8 +970,8 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#7FB07A",
-        "#E0708A"
+        "#4FB0A5",
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -1131,7 +1131,7 @@
       "hasDotsOnly": true,
       "dots": [
         "#D98B4A",
-        "#E8AC3E"
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -1150,7 +1150,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#7FB07A"
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -1203,7 +1203,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#E0708A"
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -1256,7 +1256,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#6E9CC4",
+        "#E8AC3E",
         "#A480B8"
       ],
       "hasEvents": true
@@ -1327,7 +1327,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#E8AC3E"
+        "#7FB07A"
       ],
       "hasEvents": true
     },
@@ -1380,7 +1380,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#E8AC3E"
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -1707,8 +1707,8 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#7FB07A",
-        "#E0708A"
+        "#4FB0A5",
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -1868,7 +1868,7 @@
       "hasDotsOnly": true,
       "dots": [
         "#D98B4A",
-        "#E8AC3E"
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -1887,7 +1887,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#7FB07A"
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -1940,7 +1940,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#E0708A"
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -1993,7 +1993,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#6E9CC4",
+        "#E8AC3E",
         "#A480B8"
       ],
       "hasEvents": true
@@ -2064,7 +2064,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#E8AC3E"
+        "#7FB07A"
       ],
       "hasEvents": true
     },
@@ -2117,7 +2117,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#E8AC3E"
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -2295,8 +2295,8 @@
           {
             "id": "ev8",
             "title": "Sesión de Jazz en Vivo",
-            "color": "#E0708A",
-            "bg": "rgba(224,112,138,0.28)",
+            "color": "#4FB0A5",
+            "bg": "rgba(79,176,165,0.28)",
             "timeLabel": "8 p.m. – 10:30 p.m.",
             "top": 784,
             "height": 140,
@@ -2340,8 +2340,8 @@
           {
             "id": "ev10",
             "title": "Clase de Prueba de Cerámica",
-            "color": "#6E9CC4",
-            "bg": "rgba(110,156,196,0.28)",
+            "color": "#E8AC3E",
+            "bg": "rgba(232,172,62,0.28)",
             "timeLabel": "11 a.m. – 1 p.m.",
             "top": 280,
             "height": 112,
@@ -2542,8 +2542,8 @@
           {
             "id": "ev2",
             "title": "Social en la Azotea al Atardecer",
-            "color": "#E8AC3E",
-            "bg": "rgba(232,172,62,0.28)",
+            "color": "#4FB0A5",
+            "bg": "rgba(79,176,165,0.28)",
             "timeLabel": "6:30 p.m. – 9 p.m.",
             "top": 700,
             "height": 140,
@@ -2565,8 +2565,8 @@
           {
             "id": "ev3",
             "title": "Fútbol 5 Amistoso",
-            "color": "#7FB07A",
-            "bg": "rgba(127,176,122,0.28)",
+            "color": "#4FB0A5",
+            "bg": "rgba(79,176,165,0.28)",
             "timeLabel": "4 p.m. – 5:30 p.m.",
             "top": 560,
             "height": 84,
@@ -2976,12 +2976,12 @@
         {
           "id": "ev5",
           "title": "Yoga en el Parque",
-          "color": "#7FB07A"
+          "color": "#4FB0A5"
         },
         {
           "id": "ev6",
           "title": "Noche de Jam con Guitarra",
-          "color": "#E0708A"
+          "color": "#4FB0A5"
         }
       ],
       "hasMore": false,
@@ -3157,7 +3157,7 @@
         {
           "id": "ev2",
           "title": "Social en la Azotea al Atardecer",
-          "color": "#E8AC3E"
+          "color": "#4FB0A5"
         }
       ],
       "hasMore": false,
@@ -3180,7 +3180,7 @@
         {
           "id": "ev3",
           "title": "Fútbol 5 Amistoso",
-          "color": "#7FB07A"
+          "color": "#4FB0A5"
         }
       ],
       "hasMore": false,
@@ -3237,7 +3237,7 @@
         {
           "id": "ev8",
           "title": "Sesión de Jazz en Vivo",
-          "color": "#E0708A"
+          "color": "#4FB0A5"
         }
       ],
       "hasMore": false,
@@ -3294,7 +3294,7 @@
         {
           "id": "ev10",
           "title": "Clase de Prueba de Cerámica",
-          "color": "#6E9CC4"
+          "color": "#E8AC3E"
         },
         {
           "id": "ev9",
@@ -3373,7 +3373,7 @@
         {
           "id": "ev11",
           "title": "Día de Limpieza Comunitaria",
-          "color": "#E8AC3E"
+          "color": "#7FB07A"
         }
       ],
       "hasMore": false,
@@ -3430,7 +3430,7 @@
         {
           "id": "ev12",
           "title": "Fiesta de Verano en la Cuadra",
-          "color": "#E8AC3E"
+          "color": "#4FB0A5"
         }
       ],
       "hasMore": false,
@@ -3762,8 +3762,8 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#7FB07A",
-        "#E0708A"
+        "#4FB0A5",
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -3923,7 +3923,7 @@
       "hasDotsOnly": true,
       "dots": [
         "#D98B4A",
-        "#E8AC3E"
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -3942,7 +3942,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#7FB07A"
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -3995,7 +3995,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#E0708A"
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -4048,7 +4048,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#6E9CC4",
+        "#E8AC3E",
         "#A480B8"
       ],
       "hasEvents": true
@@ -4119,7 +4119,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#E8AC3E"
+        "#7FB07A"
       ],
       "hasEvents": true
     },
@@ -4172,7 +4172,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#E8AC3E"
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -4499,8 +4499,8 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#7FB07A",
-        "#E0708A"
+        "#4FB0A5",
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -4660,7 +4660,7 @@
       "hasDotsOnly": true,
       "dots": [
         "#D98B4A",
-        "#E8AC3E"
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -4679,7 +4679,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#7FB07A"
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -4732,7 +4732,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#E0708A"
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -4785,7 +4785,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#6E9CC4",
+        "#E8AC3E",
         "#A480B8"
       ],
       "hasEvents": true
@@ -4856,7 +4856,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#E8AC3E"
+        "#7FB07A"
       ],
       "hasEvents": true
     },
@@ -4909,7 +4909,7 @@
       "moreCount": 0,
       "hasDotsOnly": true,
       "dots": [
-        "#E8AC3E"
+        "#4FB0A5"
       ],
       "hasEvents": true
     },
@@ -5093,8 +5093,8 @@
           {
             "id": "ev8",
             "title": "Sesión de Jazz en Vivo",
-            "color": "#E0708A",
-            "bg": "rgba(224,112,138,0.28)",
+            "color": "#4FB0A5",
+            "bg": "rgba(79,176,165,0.28)",
             "timeLabel": "8 p.m. – 10:30 p.m.",
             "top": 784,
             "height": 140,
@@ -5138,8 +5138,8 @@
           {
             "id": "ev10",
             "title": "Clase de Prueba de Cerámica",
-            "color": "#6E9CC4",
-            "bg": "rgba(110,156,196,0.28)",
+            "color": "#E8AC3E",
+            "bg": "rgba(232,172,62,0.28)",
             "timeLabel": "11 a.m. – 1 p.m.",
             "top": 280,
             "height": 112,
@@ -5340,8 +5340,8 @@
           {
             "id": "ev2",
             "title": "Social en la Azotea al Atardecer",
-            "color": "#E8AC3E",
-            "bg": "rgba(232,172,62,0.28)",
+            "color": "#4FB0A5",
+            "bg": "rgba(79,176,165,0.28)",
             "timeLabel": "6:30 p.m. – 9 p.m.",
             "top": 700,
             "height": 140,
@@ -5363,8 +5363,8 @@
           {
             "id": "ev3",
             "title": "Fútbol 5 Amistoso",
-            "color": "#7FB07A",
-            "bg": "rgba(127,176,122,0.28)",
+            "color": "#4FB0A5",
+            "bg": "rgba(79,176,165,0.28)",
             "timeLabel": "4 p.m. – 5:30 p.m.",
             "top": 560,
             "height": 84,
@@ -5628,7 +5628,7 @@
     {
       "id": "ev2",
       "title": "Social en la Azotea al Atardecer",
-      "color": "#E8AC3E",
+      "color": "#4FB0A5",
       "timeLabel": "6:30 p.m. – 9 p.m.",
       "location": "Terraza 8, Av. Principal"
     }
@@ -5637,7 +5637,7 @@
     {
       "id": "ev10",
       "title": "Clase de Prueba de Cerámica",
-      "color": "#6E9CC4",
+      "color": "#E8AC3E",
       "timeLabel": "11 a.m. – 1 p.m.",
       "location": "Estudio Clay & Co"
     },
@@ -5664,6 +5664,7 @@
     "pictureUrl": null,
     "modality": "IN_PERSON",
     "meetingUrl": null,
+    "groupUrl": null,
     "hostInitials": "",
     "hostName": "",
     "attendees": [],
@@ -5677,7 +5678,7 @@
   "activeEvent/attendees-ev1": {
     "id": "ev1",
     "title": "Feria de Productores",
-    "categoryLabel": "Comida y Mercado",
+    "categoryLabel": "ExpoFeria",
     "color": "#D98B4A",
     "tagBg": "rgba(217,139,74,0.22)",
     "dateLabel": "viernes, 17 de julio",
@@ -5687,6 +5688,7 @@
     "pictureUrl": null,
     "modality": "IN_PERSON",
     "meetingUrl": null,
+    "groupUrl": null,
     "hostInitials": "MT",
     "hostName": "Marco Tanaka",
     "attendees": [
@@ -5707,9 +5709,9 @@
   "activeEvent/host-me": {
     "id": "ev-host-me",
     "title": "Social en la Azotea al Atardecer",
-    "categoryLabel": "Social",
-    "color": "#E8AC3E",
-    "tagBg": "rgba(232,172,62,0.22)",
+    "categoryLabel": "Convivencia",
+    "color": "#4FB0A5",
+    "tagBg": "rgba(79,176,165,0.22)",
     "dateLabel": "viernes, 17 de julio",
     "timeLabel": "6:30 p.m. – 9 p.m.",
     "location": "Terraza 8, Av. Principal",
@@ -5717,6 +5719,7 @@
     "pictureUrl": null,
     "modality": "IN_PERSON",
     "meetingUrl": null,
+    "groupUrl": null,
     "hostInitials": "TU",
     "hostName": "Tú",
     "attendees": [
@@ -5737,9 +5740,9 @@
   "activeEvent/attendee-me": {
     "id": "ev2",
     "title": "Social en la Azotea al Atardecer",
-    "categoryLabel": "Social",
-    "color": "#E8AC3E",
-    "tagBg": "rgba(232,172,62,0.22)",
+    "categoryLabel": "Convivencia",
+    "color": "#4FB0A5",
+    "tagBg": "rgba(79,176,165,0.22)",
     "dateLabel": "viernes, 17 de julio",
     "timeLabel": "6:30 p.m. – 9 p.m.",
     "location": "Terraza 8, Av. Principal",
@@ -5747,6 +5750,7 @@
     "pictureUrl": null,
     "modality": "IN_PERSON",
     "meetingUrl": null,
+    "groupUrl": null,
     "hostInitials": "AR",
     "hostName": "Ava Reyes",
     "attendees": [
@@ -5770,7 +5774,7 @@
   "activeEvent/noattendees": {
     "id": "x",
     "title": "Feria de Productores",
-    "categoryLabel": "Comida y Mercado",
+    "categoryLabel": "ExpoFeria",
     "color": "#D98B4A",
     "tagBg": "rgba(217,139,74,0.22)",
     "dateLabel": "viernes, 17 de julio",
@@ -5780,6 +5784,7 @@
     "pictureUrl": null,
     "modality": "IN_PERSON",
     "meetingUrl": null,
+    "groupUrl": null,
     "hostInitials": "MT",
     "hostName": "Marco Tanaka",
     "attendees": [],
@@ -5862,7 +5867,7 @@
     {
       "id": "ev1",
       "title": "Feria de Productores",
-      "category": "food",
+      "category": "expoferia",
       "date": "2026-07-17",
       "startTime": "09:00",
       "endTime": "13:00",
@@ -5877,7 +5882,7 @@
     {
       "id": "ev2",
       "title": "Social en la Azotea al Atardecer",
-      "category": "social",
+      "category": "convivencia",
       "date": "2026-07-17",
       "startTime": "18:30",
       "endTime": "21:00",
@@ -5894,7 +5899,7 @@
     {
       "id": "ev10",
       "title": "Clase de Prueba de Cerámica",
-      "category": "workshop",
+      "category": "masterclass",
       "date": "2026-07-24",
       "startTime": "11:00",
       "endTime": "13:00",

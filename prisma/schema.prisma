@@ -59,6 +59,7 @@ model Event {
   modality    Modality
   location    String?
   meetingUrl  String?
+  groupUrl    String?
   description String
   pictureUrl  String?
   hostId      String

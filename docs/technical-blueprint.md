@@ -84,7 +84,7 @@ model User {
   email               String    @unique
   fullName            String
   role                Role      @default(USER)      // US 1.1.5 — never ADMIN via registration
-  birthday            DateTime? @db.Date            // shown in admin table (US 2.1.2)
+  birthday            DateTime? @db.Date            // collected at registration (US 1.1.7), shown in admin table (US 2.1.2); nullable only for rows that predate it (seeded admin)
   profession          String?                       // Profesión — optional (US 1.4.2)
   occupation          String?                       // Ocupación — mandatory (US 1.4.3)
   ikigai              String?                       // Ikigai — optional (US 1.4.2)
@@ -109,13 +109,14 @@ model InviteCode {
 model Event {
   id          String    @id @default(cuid())
   title       String
-  category    String                              // TBD per US 3.1.1 — string now, enum/table later
+  category    String                              // one of the 7 keys in CATEGORY_ORDER (US 3.1.1) — string now, enum/table later
   date        DateTime  @db.Date
   startTime   String                              // "HH:MM" 24h (keeps current model)
   endTime     String
   modality    Modality
   location    String?                             // physical address — required only if IN_PERSON (US 3.1.2/3.1.10)
   meetingUrl  String?                             // optional for VIRTUAL (US 3.1.11)
+  groupUrl    String?                             // optional WhatsApp/group link, any modality (US 3.1.12); only returned to the host + attendees (US 3.2.5)
   description String
   pictureUrl  String?                             // Supabase Storage path (US 3.1.1, US 3.4.4)
   hostId      String
@@ -144,8 +145,8 @@ model EventAttendee {
 
 | Concern               | Implementation                                                                                                                                                                                                  | Stories covered          |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| Sign up               | Server Action `register`: Zod-validate → check invite code is `UNUSED` → `supabase.auth.signUp` → create `User` row in the **same transaction** that marks the code `USED` + `usedBy`/`usedAt` → session issued | US 1.1.1–1.1.6, US 2.2.7 |
-| Code errors           | Distinct Zod refinement results → "code required" / "invalid, used or expired"                                                                                                                                  | US 1.1.2, US 1.1.3       |
+| Sign up               | Server Action `register`: Zod-validate → check the email is free → create the pre-confirmed auth user (admin API) → fill in the trigger-made `User` row (name, birthday, `role = USER`) → session issued. **No invite code** is asked for or consumed (open registration); a failure after the auth user exists deletes it | US 1.1.1–1.1.7, US 2.2.7 |
+| Code errors (retired)           | Not applicable: registration no longer takes a code (the codes still exist in the admin area but do not gate access)                                                                                                                                  | US 1.1.2, US 1.1.3       |
 | Login                 | `supabase.auth.signInWithPassword`; on success read `role` and redirect: `ADMIN → /admin`, `USER → /calendar`                                                                                                   | US 1.2.1–2.1.3           |
 | Generic error         | Same message for wrong email or password                                                                                                                                                                        | US 1.2.4                 |
 | Logout                | `supabase.auth.signOut` → redirect `/login`                                                                                                                                                                     | US 1.3.1                 |
@@ -265,7 +266,7 @@ SUPABASE_SECRET_KEY=...   # server-only (Server Actions)
 | Phase               | Scope                                                                                                                                                         | Stories        |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
 | **0 — Foundations** | Supabase env, Prisma schema + migration, Supabase SSR clients, auth→public sync trigger, CI pipeline, dev seed (admin account + invite codes + sample events) | —              |
-| **1 — Access**      | Login/logout with role redirect, middleware + action guards, invite-code generation, registration with invite code, onboarding gate                           | Epic 1, US 2.2 |
+| **1 — Access**      | Login/logout with role redirect, middleware + action guards, invite-code generation, registration (originally with an invite code, now open), onboarding gate                           | Epic 1, US 2.2 |
 | **2 — Admin**       | Users table (pagination/search/count), codes list & usage view                                                                                                | US 2.1, US 2.3 |
 | **3 — Events**      | Create event (validation, modality, picture upload), join/leave, month/week views with overlap layout + ±3-month window, event detail                         | Epic 3         |
 | **4 — Hardening**   | E2E suite, copy review (es-PE), performance pass, production deploy                                                                                           | Epic 4         |

@@ -56,6 +56,7 @@ const toEvent = (e: (typeof SEED_EVENTS)[number]): CalendarEvent => ({
   ...e,
   modality: "IN_PERSON",
   meetingUrl: null,
+  groupUrl: null,
   pictureUrl: null,
   hostId: real(e.hostId),
   attendeeIds: e.attendeeIds.map(real),
@@ -67,7 +68,7 @@ const ev = (id: string) => events.find((e) => e.id === id)!
 function legacyShape(list: CalendarEvent[]) {
   return list.map((e) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { modality, meetingUrl, pictureUrl, ...rest } = e
+    const { modality, meetingUrl, groupUrl, pictureUrl, ...rest } = e
     return {
       ...rest,
       hostId: LEGACY_ID[e.hostId] ?? e.hostId,

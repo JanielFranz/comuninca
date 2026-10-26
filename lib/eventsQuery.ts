@@ -1,5 +1,5 @@
 /** Pure helpers for the calendar data layer (no I/O). */
-import { CATEGORY_ORDER } from "./constants"
+import { CATEGORY_ORDER, DEFAULT_CATEGORY } from "./constants"
 import { parseUtcDateKey, utcDateKey } from "./dateUtils"
 import { STRINGS } from "./strings"
 import type {
@@ -12,14 +12,13 @@ import { displayName, initialsFor } from "./userDisplay"
 
 /** How many calendar months around today's month may be fetched. */
 export const EVENTS_WINDOW_MONTHS = 3
-const DEFAULT_CATEGORY: CategoryKey = "social"
 
 export interface EventsWindow {
   from: string
   to: string
 }
 
-/** Maps a free-form DB category to a known key; unknown -> "social". */
+/** Maps a free-form DB category to a known key; unknown -> DEFAULT_CATEGORY. */
 export function toCategoryKey(value: unknown): CategoryKey {
   return (CATEGORY_ORDER as readonly unknown[]).includes(value)
     ? (value as CategoryKey)
@@ -71,13 +70,26 @@ export interface EventRow {
   modality: EventModality
   location: string | null
   meetingUrl: string | null
+  groupUrl: string | null
   description: string
   pictureUrl: string | null
   host: { id: string; fullName: string }
   attendees: { userId: string; user: { fullName: string } }[]
 }
 
-export function mapEventRow(row: EventRow): CalendarEvent {
+/**
+ * The group link is private: only the host and the people who joined may
+ * receive it. Fails closed — with no `viewerId` nobody does.
+ */
+function canSeeGroupUrl(row: EventRow, viewerId: string | undefined): boolean {
+  if (viewerId === undefined) return false
+  return (
+    row.host.id === viewerId || row.attendees.some((a) => a.userId === viewerId)
+  )
+}
+
+/** `viewerId` is the signed-in user; it decides whether `groupUrl` is revealed. */
+export function mapEventRow(row: EventRow, viewerId?: string): CalendarEvent {
   return {
     id: row.id,
     title: row.title,
@@ -89,6 +101,7 @@ export function mapEventRow(row: EventRow): CalendarEvent {
     description: row.description,
     modality: row.modality,
     meetingUrl: row.meetingUrl,
+    groupUrl: canSeeGroupUrl(row, viewerId) ? row.groupUrl : null,
     pictureUrl: row.pictureUrl,
     hostId: row.host.id,
     attendeeIds: row.attendees.map((a) => a.userId),

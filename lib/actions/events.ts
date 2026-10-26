@@ -171,6 +171,7 @@ export async function listEvents(input?: {
         modality: true,
         location: true,
         meetingUrl: true,
+        groupUrl: true,
         description: true,
         pictureUrl: true,
         host: { select: { id: true, fullName: true } },
@@ -184,7 +185,8 @@ export async function listEvents(input?: {
 
     return {
       ok: true,
-      events: rows.map(mapEventRow),
+      // `groupUrl` is revealed per viewer: only to the host and attendees.
+      events: rows.map((row) => mapEventRow(row, guard.user.id)),
       people: collectPeople(rows, guard.user),
       today,
       window,
@@ -205,6 +207,8 @@ export type CreateEventInput = {
   location?: unknown
   /** Virtual: optional meeting link. Ignored for Presencial. */
   meetingUrl?: unknown
+  /** Optional WhatsApp (or other) group link, either modality. */
+  groupUrl?: unknown
   description: unknown
   /** Optional: a `data:image/jpeg;base64,...` URL from `lib/storage.ts`. */
   picture?: unknown
@@ -281,6 +285,7 @@ export async function createEvent(
         modality: data.modality,
         location: data.location,
         meetingUrl: data.meetingUrl,
+        groupUrl: data.groupUrl,
         description: data.description,
         hostId: user.id,
       },
@@ -298,12 +303,16 @@ export async function createEvent(
 
     return {
       ok: true,
-      event: mapEventRow({
-        ...row,
-        pictureUrl,
-        host: { id: user.id, fullName: user.fullName },
-        attendees: [],
-      }),
+      // The creator is the host, so they get their own group link back.
+      event: mapEventRow(
+        {
+          ...row,
+          pictureUrl,
+          host: { id: user.id, fullName: user.fullName },
+          attendees: [],
+        },
+        user.id,
+      ),
     }
   } catch {
     return { ok: false, error: "UNEXPECTED" }
@@ -321,7 +330,12 @@ function isPrismaErrorCode(e: unknown, code: string): boolean {
 export type ToggleJoinInput = { eventId: unknown }
 
 export type ToggleJoinResult =
-  | { ok: true; joined: boolean }
+  | {
+      ok: true
+      joined: boolean
+      /** The event's group link, only when this call made the user join; null otherwise. */
+      groupUrl: string | null
+    }
   | {
       ok: false
       error:
@@ -383,7 +397,7 @@ export async function toggleJoin(
   try {
     const event = await prisma.event.findUnique({
       where: { id: eventId },
-      select: { id: true },
+      select: { id: true, groupUrl: true },
     })
     if (!event) return { ok: false, error: "EVENT_NOT_FOUND" }
 
@@ -392,7 +406,9 @@ export async function toggleJoin(
         data: { eventId, userId: user.id },
       })
       revalidatePath("/calendar")
-      return { ok: true, joined: true }
+      // Joining is what unlocks the group link, so it is returned right here
+      // (the calendar's next refresh would carry it too).
+      return { ok: true, joined: true, groupUrl: event.groupUrl ?? null }
     } catch (createError) {
       if (!isPrismaErrorCode(createError, "P2002")) {
         return { ok: false, error: "UNEXPECTED" }
@@ -409,7 +425,7 @@ export async function toggleJoin(
         // attending) matches what we're about to report.
       }
       revalidatePath("/calendar")
-      return { ok: true, joined: false }
+      return { ok: true, joined: false, groupUrl: null }
     }
   } catch {
     return { ok: false, error: "UNEXPECTED" }

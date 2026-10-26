@@ -162,7 +162,7 @@ describe("seed data mapping", () => {
     expect(new Set(events.map((e) => e.id)).size).toBe(12)
     expect(events[0]).toMatchObject({
       title: "Feria de Productores",
-      category: "food",
+      category: "expoferia",
       startTime: "09:00",
       endTime: "13:00",
       modality: "IN_PERSON",

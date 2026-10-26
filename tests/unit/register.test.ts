@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-type Code = { id: string; code: string; status: string; usedAt: Date | null }
-
 const store = {
-  codes: [] as Code[],
   users: [] as { id: string; email: string }[],
 }
 
+// Registration is open: nothing may read or spend an invite code. These spies
+// exist so any such access fails the tests below.
 const findUniqueCode = vi.fn()
+const findFirstCode = vi.fn()
 const updateManyCode = vi.fn()
 const findFirstUser = vi.fn()
 const updateUser = vi.fn()
@@ -25,6 +25,7 @@ vi.mock("@/lib/db", () => ({
   prisma: {
     inviteCode: {
       findUnique: (...a: unknown[]) => findUniqueCode(...a),
+      findFirst: (...a: unknown[]) => findFirstCode(...a),
       updateMany: (...a: unknown[]) => updateManyCode(...a),
     },
     user: { findFirst: (...a: unknown[]) => findFirstUser(...a) },
@@ -42,35 +43,14 @@ import { register } from "@/lib/actions/auth"
 
 const valid = {
   fullName: "  Ana Pérez ",
+  birthday: "1990-05-15",
   email: " Ana@Example.com ",
   password: "s3cret-pass",
-  code: "SEED-0001",
 }
 
-function seedCode(status = "UNUSED", code = "SEED-0001"): Code {
-  const c = { id: "code-1", code, status, usedAt: null }
-  store.codes = [c]
-  return c
-}
-
-// Small in-memory fake honoring the same conditional semantics as the DB.
 beforeEach(() => {
   vi.clearAllMocks()
-  store.codes = []
   store.users = []
-  seedCode()
-  findUniqueCode.mockImplementation(async ({ where }) => {
-    const c = store.codes.find((x) => x.code === where.code)
-    return c ? { id: c.id, status: c.status } : null
-  })
-  updateManyCode.mockImplementation(async ({ where, data }) => {
-    const c = store.codes.find(
-      (x) => x.id === where.id && x.status === where.status,
-    )
-    if (!c) return { count: 0 }
-    Object.assign(c, data)
-    return { count: 1 }
-  })
   findFirstUser.mockImplementation(
     async ({ where }) =>
       store.users.find(
@@ -95,33 +75,28 @@ function nothingCreated() {
   expect(updateUser).not.toHaveBeenCalled()
 }
 
-describe("register input validation", () => {
-  it.each([[""], ["   "]])(
-    "blank code %j gives CODE_REQUIRED without touching anything",
-    async (code) => {
-      expect(await register({ ...valid, code })).toEqual({
-        ok: false,
-        error: "CODE_REQUIRED",
-      })
-      expect(findUniqueCode).not.toHaveBeenCalled()
-      expect(updateManyCode).not.toHaveBeenCalled()
-      expect(createAdminClient).not.toHaveBeenCalled()
-      expect(revalidatePath).not.toHaveBeenCalled()
-    },
-  )
+function inviteCodesUntouched() {
+  expect(findUniqueCode).not.toHaveBeenCalled()
+  expect(findFirstCode).not.toHaveBeenCalled()
+  expect(updateManyCode).not.toHaveBeenCalled()
+}
 
+describe("register input validation", () => {
   it.each([
     ["empty name", { fullName: "  " }, "fullName"],
     ["name over 100", { fullName: "a".repeat(101) }, "fullName"],
+    ["empty birthday", { birthday: "" }, "birthday"],
+    ["future birthday", { birthday: "2999-01-01" }, "birthday"],
+    ["impossible birthday", { birthday: "1990-02-30" }, "birthday"],
     ["malformed email", { email: "nope" }, "email"],
     ["password of 7", { password: "1234567" }, "password"],
     ["password of 73", { password: "x".repeat(73) }, "password"],
-    ["code over 64", { code: "A".repeat(65) }, "code"],
   ])("%s gives INVALID_INPUT for that field", async (_l, patch, field) => {
     const result = await register({ ...valid, ...patch })
     expect(result).toMatchObject({ ok: false, error: "INVALID_INPUT" })
     expect(Object.keys((result as { fields: object }).fields)).toContain(field)
-    expect(findUniqueCode).not.toHaveBeenCalled()
+    nothingCreated()
+    expect(createAdminClient).not.toHaveBeenCalled()
     expect(revalidatePath).not.toHaveBeenCalled()
   })
 
@@ -144,139 +119,114 @@ describe("register input validation", () => {
   })
 })
 
-describe("register code checks", () => {
-  it("unknown, USED and EXPIRED codes give identical CODE_INVALID and create nothing", async () => {
-    const results = []
-    results.push(await register({ ...valid, code: "NOPE-0000" }))
-    seedCode("USED")
-    results.push(await register(valid))
-    seedCode("EXPIRED")
-    results.push(await register(valid))
-
-    for (const r of results) {
-      expect(r).toEqual({ ok: false, error: "CODE_INVALID" })
-    }
-    expect(updateManyCode).not.toHaveBeenCalled()
-    nothingCreated()
-    expect(revalidatePath).not.toHaveBeenCalled()
+describe("register is open (no invite code)", () => {
+  it("succeeds without any code and never touches the invite codes", async () => {
+    expect(await register(valid)).toEqual({ ok: true, redirectTo: "/calendar" })
+    inviteCodesUntouched()
   })
 
-  it("a lost claim race (count 0) gives CODE_INVALID and creates no auth user", async () => {
-    updateManyCode.mockResolvedValueOnce({ count: 0 })
-    expect(await register(valid)).toEqual({ ok: false, error: "CODE_INVALID" })
-    expect(updateManyCode).toHaveBeenCalledTimes(1)
-    nothingCreated()
-    expect(revalidatePath).not.toHaveBeenCalled()
-  })
+  it.each([
+    ["blank", ""],
+    ["whitespace", "   "],
+    ["unknown", "NOPE-0000"],
+    ["oversized", "A".repeat(500)],
+  ])(
+    "a leftover %s `code` from an old client is ignored, not validated",
+    async (_l, code) => {
+      const result = await register({ ...valid, code } as never)
+      expect(result).toEqual({ ok: true, redirectTo: "/calendar" })
+      inviteCodesUntouched()
+    },
+  )
 
-  it("finds a hyphenless lowercase generated code via normalization", async () => {
-    seedCode("UNUSED", "ABCDE-FGHJK-MNPQR-STVWX-YZ012-3")
-    const result = await register({
-      ...valid,
-      code: " abcde fghjk mnpqr stvwx yz012 3 ",
-    })
-    expect(result).toEqual({ ok: true, redirectTo: "/calendar" })
-    expect(revalidatePath).toHaveBeenCalledWith("/calendar")
-    expect(revalidatePath).toHaveBeenCalledWith("/onboarding")
+  it("does not link the new user to any invite code", async () => {
+    await register({ ...valid, code: "SEED-0001" } as never)
+    const data = updateUser.mock.calls[0][0].data
+    expect(data).not.toHaveProperty("inviteCodeId")
   })
 })
 
 describe("register email checks", () => {
-  it("duplicate email (pre-check, case-insensitive) gives EMAIL_IN_USE without claiming", async () => {
+  it("duplicate email (pre-check, case-insensitive) gives EMAIL_IN_USE", async () => {
     store.users.push({ id: "x", email: "ana@example.com" })
     expect(await register(valid)).toEqual({ ok: false, error: "EMAIL_IN_USE" })
-    expect(updateManyCode).not.toHaveBeenCalled()
-    expect(store.codes[0].status).toBe("UNUSED")
     nothingCreated()
+    expect(deleteUser).not.toHaveBeenCalled()
     expect(revalidatePath).not.toHaveBeenCalled()
   })
 
   it.each([
     ["email_exists code", { status: 422, code: "email_exists" }],
     ["user_already_exists code", { status: 422, code: "user_already_exists" }],
-  ])(
-    "auth %s after claiming gives EMAIL_IN_USE and reverts the claim",
-    async (_l, err) => {
-      createUser.mockResolvedValueOnce({ data: { user: null }, error: err })
-      expect(await register(valid)).toEqual({
-        ok: false,
-        error: "EMAIL_IN_USE",
-      })
-      expect(store.codes[0]).toMatchObject({ status: "UNUSED", usedAt: null })
-      expect(deleteUser).not.toHaveBeenCalled()
-      expect(updateUser).not.toHaveBeenCalled()
-      expect(revalidatePath).not.toHaveBeenCalled()
-    },
-  )
+  ])("auth %s gives EMAIL_IN_USE", async (_l, err) => {
+    createUser.mockResolvedValueOnce({ data: { user: null }, error: err })
+    expect(await register(valid)).toEqual({
+      ok: false,
+      error: "EMAIL_IN_USE",
+    })
+    expect(deleteUser).not.toHaveBeenCalled()
+    expect(updateUser).not.toHaveBeenCalled()
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
 })
 
 describe("register rollback paths", () => {
-  it("HTTP 422 weak_password gives UNEXPECTED (not EMAIL_IN_USE) and reverts the claim", async () => {
+  it("HTTP 422 weak_password gives UNEXPECTED (not EMAIL_IN_USE)", async () => {
     createUser.mockResolvedValueOnce({
       data: { user: null },
       error: { status: 422, code: "weak_password" },
     })
     expect(await register(valid)).toEqual({ ok: false, error: "UNEXPECTED" })
-    expect(store.codes[0]).toMatchObject({ status: "UNUSED", usedAt: null })
+    expect(deleteUser).not.toHaveBeenCalled()
     expect(revalidatePath).not.toHaveBeenCalled()
   })
 
-  it("other auth failure gives UNEXPECTED and reverts the claim", async () => {
+  it("other auth failure gives UNEXPECTED", async () => {
     createUser.mockResolvedValueOnce({
       data: { user: null },
       error: { status: 500, code: "unexpected_failure" },
     })
     expect(await register(valid)).toEqual({ ok: false, error: "UNEXPECTED" })
-    expect(store.codes[0]).toMatchObject({ status: "UNUSED", usedAt: null })
+    expect(deleteUser).not.toHaveBeenCalled()
     expect(revalidatePath).not.toHaveBeenCalled()
   })
 
-  it("admin client throwing gives UNEXPECTED and reverts the claim", async () => {
+  it("admin client throwing gives UNEXPECTED", async () => {
     createAdminClient.mockImplementationOnce(() => {
       throw new Error("missing env")
     })
     expect(await register(valid)).toEqual({ ok: false, error: "UNEXPECTED" })
-    expect(store.codes[0].status).toBe("UNUSED")
     expect(revalidatePath).not.toHaveBeenCalled()
   })
 
-  it("User update failing deletes the auth user, reverts the claim, gives UNEXPECTED", async () => {
+  it("User update failing deletes the auth user and gives UNEXPECTED", async () => {
     updateUser.mockRejectedValueOnce(new Error("db down"))
     expect(await register(valid)).toEqual({ ok: false, error: "UNEXPECTED" })
     expect(deleteUser).toHaveBeenCalledWith("auth-1")
-    expect(store.codes[0]).toMatchObject({ status: "UNUSED", usedAt: null })
     expect(signInWithPassword).not.toHaveBeenCalled()
     expect(revalidatePath).not.toHaveBeenCalled()
   })
 
-  it("deleteUser throwing keeps the claim USED and never masks UNEXPECTED", async () => {
+  it("deleteUser throwing never masks UNEXPECTED", async () => {
     updateUser.mockRejectedValueOnce(new Error("db down"))
     deleteUser.mockRejectedValueOnce(new Error("auth down"))
     expect(await register(valid)).toEqual({ ok: false, error: "UNEXPECTED" })
-    expect(store.codes[0].status).toBe("USED")
     expect(revalidatePath).not.toHaveBeenCalled()
   })
 
-  it("deleteUser resolving an error keeps the claim USED and returns UNEXPECTED", async () => {
+  it("deleteUser resolving an error still returns UNEXPECTED", async () => {
     updateUser.mockRejectedValueOnce(new Error("db down"))
     deleteUser.mockResolvedValueOnce({ error: { status: 500 } })
     expect(await register(valid)).toEqual({ ok: false, error: "UNEXPECTED" })
-    expect(store.codes[0].status).toBe("USED")
     expect(revalidatePath).not.toHaveBeenCalled()
   })
 })
 
 describe("register success", () => {
-  it("claims the code, creates the confirmed user, links it with role USER and starts a session", async () => {
+  it("creates the confirmed user, fills in the profile with role USER and starts a session", async () => {
     const result = await register({ ...valid, role: "ADMIN" } as never)
 
     expect(result).toEqual({ ok: true, redirectTo: "/calendar" })
-    expect(updateManyCode).toHaveBeenCalledWith({
-      where: { id: "code-1", status: "UNUSED" },
-      data: { status: "USED", usedAt: expect.any(Date) },
-    })
-    expect(store.codes[0].status).toBe("USED")
-    expect(store.codes[0].usedAt).toBeInstanceOf(Date)
     expect(createUser).toHaveBeenCalledWith({
       email: "Ana@Example.com",
       password: "s3cret-pass",
@@ -285,7 +235,11 @@ describe("register success", () => {
     })
     expect(updateUser).toHaveBeenCalledWith({
       where: { id: "auth-1" },
-      data: { fullName: "Ana Pérez", inviteCodeId: "code-1", role: "USER" },
+      data: {
+        fullName: "Ana Pérez",
+        birthday: new Date("1990-05-15T00:00:00.000Z"),
+        role: "USER",
+      },
     })
     expect(signInWithPassword).toHaveBeenCalledWith({
       email: "Ana@Example.com",
@@ -297,13 +251,12 @@ describe("register success", () => {
     expect(revalidatePath).toHaveBeenCalledWith("/onboarding")
   })
 
-  it("a second registration with the same code is CODE_INVALID", async () => {
+  it("two different people can register back to back with no code", async () => {
     expect(await register(valid)).toEqual({ ok: true, redirectTo: "/calendar" })
-    revalidatePath.mockClear()
     const again = await register({ ...valid, email: "otra@example.com" })
-    expect(again).toEqual({ ok: false, error: "CODE_INVALID" })
-    expect(createUser).toHaveBeenCalledTimes(1)
-    expect(revalidatePath).not.toHaveBeenCalled()
+    expect(again).toEqual({ ok: true, redirectTo: "/calendar" })
+    expect(createUser).toHaveBeenCalledTimes(2)
+    inviteCodesUntouched()
   })
 
   it("session start failing keeps the account and redirects to /login", async () => {
@@ -312,7 +265,6 @@ describe("register success", () => {
       error: { status: 500 },
     })
     expect(await register(valid)).toEqual({ ok: true, redirectTo: "/login" })
-    expect(store.codes[0].status).toBe("USED")
     expect(deleteUser).not.toHaveBeenCalled()
     expect(revalidatePath).not.toHaveBeenCalled()
   })

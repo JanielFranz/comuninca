@@ -5,7 +5,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/db"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { inviteCodeCandidates } from "@/lib/inviteCodeInput"
+import { parseUtcDateKey } from "@/lib/dateUtils"
 import { checkRegisterInput, registerSchema } from "@/lib/validation/auth"
 import type { RegisterFieldErrors } from "@/lib/validation/auth"
 
@@ -15,10 +15,7 @@ export type SignInResult =
 
 export type RegisterResult =
   | { ok: true; redirectTo: "/calendar" | "/login" }
-  | {
-      ok: false
-      error: "CODE_REQUIRED" | "CODE_INVALID" | "EMAIL_IN_USE" | "UNEXPECTED"
-    }
+  | { ok: false; error: "EMAIL_IN_USE" | "UNEXPECTED" }
   | { ok: false; error: "INVALID_INPUT"; fields: RegisterFieldErrors }
 
 export type SignOutResult = { ok: true } | { ok: false; error: "UNEXPECTED" }
@@ -101,74 +98,46 @@ function isEmailTaken(error: { code?: string }): boolean {
 }
 
 /**
- * Registers a normal user with a single-use invite code.
+ * Registers a normal user. Registration is open: no invite code is asked for,
+ * checked or consumed (the admin code tooling still exists but is not part of
+ * this flow).
  *
  * A Supabase Auth call cannot join a Prisma transaction, so atomicity is built
- * from three pieces instead of one `$transaction`:
- * 1. the code is CLAIMED with a conditional `updateMany` (UNUSED -> USED); only
- *    one concurrent caller can win, which is what makes a code single-use;
- * 2. the auth user is created, then the trigger-made `public.User` row is
- *    linked to the code in one `$transaction`;
- * 3. every failure before the link is compensated: the claim is reverted and
- *    the auth user (if already created) is deleted.
+ * from two pieces instead of one `$transaction`:
+ * 1. the auth user is created, then the trigger-made `public.User` row is
+ *    filled in (name, birthday, role);
+ * 2. a failure after the auth user exists is compensated by deleting it.
  *
  * The auth user is created with the admin API and a pre-confirmed email rather
  * than `signUp`: the project may require email confirmation and its default
  * SMTP is heavily rate-limited, so `signUp` would return no session and could
- * fail; the invite code already vouches for the visitor.
+ * fail. Consequence: the email address is not verified.
  */
 export async function register(input: {
   fullName: string
+  birthday: string
   email: string
   password: string
-  code: string
 }): Promise<RegisterResult> {
   const checked = checkRegisterInput(input)
   if (!checked.valid) {
-    // A blank code is its own specific error (AC 1.1.2).
-    const rawCode = (input as { code?: unknown } | null)?.code
-    if (typeof rawCode === "string" && rawCode.trim() === "") {
-      return { ok: false, error: "CODE_REQUIRED" }
-    }
     return { ok: false, error: "INVALID_INPUT", fields: checked.errors }
   }
   // Only the schema's own keys survive: a `role` in the input is dropped here.
-  const { fullName, email, password, code } = registerSchema.parse(input)
+  const { fullName, birthday, email, password } = registerSchema.parse(input)
 
-  let claimedId: string | null = null
   let authUserId: string | null = null
   let linked = false
 
   try {
-    // (b) Look the code up. Unknown, USED and EXPIRED are indistinguishable.
-    let invite: { id: string; status: string } | null = null
-    for (const candidate of inviteCodeCandidates(code)) {
-      invite = await prisma.inviteCode.findUnique({
-        where: { code: candidate },
-        select: { id: true, status: true },
-      })
-      if (invite) break
-    }
-    if (!invite || invite.status !== "UNUSED") {
-      return { ok: false, error: "CODE_INVALID" }
-    }
-
-    // (c) Cheap pre-check, before the code is spent.
+    // (b) Cheap pre-check, before an auth user is created.
     const existing = await prisma.user.findFirst({
       where: { email: { equals: email, mode: "insensitive" } },
       select: { id: true },
     })
     if (existing) return { ok: false, error: "EMAIL_IN_USE" }
 
-    // (d) Atomic claim: exactly one caller flips UNUSED -> USED.
-    const claim = await prisma.inviteCode.updateMany({
-      where: { id: invite.id, status: "UNUSED" },
-      data: { status: "USED", usedAt: new Date() },
-    })
-    if (claim.count !== 1) return { ok: false, error: "CODE_INVALID" }
-    claimedId = invite.id
-
-    // (e) Create the (pre-confirmed) auth user.
+    // (c) Create the (pre-confirmed) auth user.
     const admin = createAdminClient()
     const created = await admin.auth.admin.createUser({
       email,
@@ -187,12 +156,15 @@ export async function register(input: {
     }
     authUserId = created.data.user.id
 
-    // (f) Fill in the trigger-created row. `role` is fixed here, never input.
-    const inviteId = invite.id
+    // (d) Fill in the trigger-created row. `role` is fixed here, never input.
     await prisma.$transaction(async (tx) => {
       await tx.user.update({
         where: { id: created.data.user.id },
-        data: { fullName, inviteCodeId: inviteId, role: "USER" },
+        data: {
+          fullName,
+          birthday: parseUtcDateKey(birthday),
+          role: "USER",
+        },
       })
     })
     linked = true
@@ -200,10 +172,10 @@ export async function register(input: {
     // Deliberately not logging the error object: it may carry credentials.
     return { ok: false, error: "UNEXPECTED" }
   } finally {
-    if (!linked) await compensate(claimedId, authUserId)
+    if (!linked) await compensate(authUserId)
   }
 
-  // (g) Start the session. The account already exists at this point, so a
+  // (e) Start the session. The account already exists at this point, so a
   // failure here is not rolled back: the person can sign in manually.
   try {
     const supabase = await createClient()
@@ -221,31 +193,11 @@ export async function register(input: {
 }
 
 /** Best-effort undo of a half-finished registration; never throws. */
-async function compensate(
-  claimedId: string | null,
-  authUserId: string | null,
-): Promise<void> {
-  if (authUserId) {
-    let deleted = false
-    try {
-      const { error } =
-        await createAdminClient().auth.admin.deleteUser(authUserId)
-      deleted = !error
-    } catch {
-      // Treated as not deleted below.
-    }
-    // Fail closed: an auth user we could not remove must not leave its code
-    // reusable, so the claim stays USED.
-    if (!deleted) return
-  }
-  if (claimedId) {
-    try {
-      await prisma.inviteCode.updateMany({
-        where: { id: claimedId, status: "USED" },
-        data: { status: "UNUSED", usedAt: null },
-      })
-    } catch {
-      // Same: best effort, never mask the original result.
-    }
+async function compensate(authUserId: string | null): Promise<void> {
+  if (!authUserId) return
+  try {
+    await createAdminClient().auth.admin.deleteUser(authUserId)
+  } catch {
+    // Best effort, never mask the original result.
   }
 }

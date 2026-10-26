@@ -75,10 +75,17 @@ export default function OnboardingForm() {
             <label className={styles.label} htmlFor="onboarding-profession">
               {t.professionLabel}
             </label>
+            <div
+              id="onboarding-profession-hint"
+              className={onboardingStyles.hint}
+            >
+              {t.professionHint}
+            </div>
             <input
               id="onboarding-profession"
               type="text"
               autoComplete="off"
+              aria-describedby="onboarding-profession-hint"
               value={profession}
               onChange={(e) => {
                 setProfession(e.target.value)
@@ -91,10 +98,17 @@ export default function OnboardingForm() {
             <label className={styles.label} htmlFor="onboarding-occupation">
               {t.occupationLabel}
             </label>
+            <div
+              id="onboarding-occupation-hint"
+              className={onboardingStyles.hint}
+            >
+              {t.occupationHint}
+            </div>
             <input
               id="onboarding-occupation"
               type="text"
               autoComplete="off"
+              aria-describedby="onboarding-occupation-hint"
               required
               aria-required="true"
               value={occupation}
@@ -109,10 +123,14 @@ export default function OnboardingForm() {
             <label className={styles.label} htmlFor="onboarding-ikigai">
               {t.ikigaiLabel}
             </label>
+            <div id="onboarding-ikigai-hint" className={onboardingStyles.hint}>
+              {t.ikigaiHint}
+            </div>
             <textarea
               id="onboarding-ikigai"
               rows={4}
               autoComplete="off"
+              aria-describedby="onboarding-ikigai-hint"
               value={ikigai}
               onChange={(e) => {
                 setIkigai(e.target.value)

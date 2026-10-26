@@ -3,6 +3,7 @@ import { STRINGS } from "@/lib/strings"
 import {
   checkEventInput,
   createEventSchema,
+  isValidGroupUrl,
   isValidMeetingUrl,
 } from "@/lib/validation/events"
 
@@ -12,7 +13,7 @@ const NOW = new Date("2026-09-26T20:30:00Z")
 
 const valid = {
   title: "Feria de barrio",
-  category: "social",
+  category: "workshop",
   date: "2026-09-27",
   startTime: "18:00",
   endTime: "19:00",
@@ -44,6 +45,7 @@ describe("eventSchema messages", () => {
         title: "Hola",
         location: "Calle 1",
         meetingUrl: null,
+        groupUrl: null,
         description: "d",
       },
     })
@@ -68,19 +70,27 @@ describe("eventSchema messages", () => {
     expect(msg({ modality: "HYBRID" })).toBe(t.required)
   })
 
-  it("category outside the six -> required", () => {
+  it("category outside the seven -> required", () => {
     expect(msg({ category: "party" })).toBe(t.required)
     for (const c of [
-      "social",
-      "music",
       "workshop",
-      "sports",
-      "food",
+      "webinar",
+      "masterclass",
       "networking",
+      "expoferia",
+      "voluntariado",
+      "convivencia",
     ]) {
       expect(msg({ category: c })).toBe("OK")
     }
   })
+
+  it.each(["social", "music", "sports", "food"])(
+    "retired category %j is no longer accepted",
+    (c) => {
+      expect(msg({ category: c })).toBe(t.required)
+    },
+  )
 
   it.each(["2026-02-30", "2026-13-01", "2026-9-5", "27/09/2026"])(
     "invalid calendar date %s -> required",
@@ -213,6 +223,52 @@ describe("modality rules", () => {
     expect(
       msg({ modality: "VIRTUAL", location: "", meetingUrl: "ftp://x" }),
     ).toBe(t.invalidMeetingUrl)
+  })
+})
+
+describe("groupUrl (optional WhatsApp/group link)", () => {
+  const wa = "https://chat.whatsapp.com/AbCdEf123456"
+  it("is optional: missing, empty and whitespace-only all store null", () => {
+    for (const groupUrl of [undefined, "", "   ", null]) {
+      expect(checkEventInput({ ...valid, groupUrl }, NOW)).toMatchObject({
+        valid: true,
+        data: { groupUrl: null },
+      })
+    }
+  })
+  it("is stored trimmed for Presencial and for Virtual events alike", () => {
+    expect(
+      checkEventInput({ ...valid, groupUrl: ` ${wa} ` }, NOW),
+    ).toMatchObject({ valid: true, data: { groupUrl: wa } })
+    expect(
+      checkEventInput(
+        { ...valid, modality: "VIRTUAL", location: "", groupUrl: wa },
+        NOW,
+      ),
+    ).toMatchObject({ valid: true, data: { groupUrl: wa, meetingUrl: null } })
+  })
+  it.each([
+    ["javascript:alert(1)"],
+    ["data:text/html,x"],
+    ["ftp://x.com/g"],
+    ["chat.whatsapp.com/AbCdEf"],
+    ["https://user:pass@x.com/g"],
+    ["https://x.com/a b"],
+    ["https://x.com/" + "a".repeat(500)],
+  ])("invalid link %j -> invalidGroupUrl", (groupUrl) => {
+    expect(msg({ groupUrl })).toBe(t.invalidGroupUrl)
+    expect(checkEventInput({ ...valid, groupUrl }, NOW)).toMatchObject({
+      valid: false,
+      field: "groupUrl",
+    })
+  })
+  it("a missing required field is reported before a bad group link", () => {
+    expect(msg({ title: "", groupUrl: "nope" })).toBe(t.required)
+  })
+  it("uses the same rules as the meeting link", () => {
+    for (const u of [wa, "javascript:alert(1)", "http://a.b", "", "//x.com"]) {
+      expect(isValidGroupUrl(u)).toBe(isValidMeetingUrl(u))
+    }
   })
 })
 

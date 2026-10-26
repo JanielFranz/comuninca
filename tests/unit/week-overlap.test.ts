@@ -24,7 +24,7 @@ function makeEvent(
   return {
     id,
     title,
-    category: "social",
+    category: "convivencia",
     date: DAY,
     startTime,
     endTime,
@@ -32,6 +32,7 @@ function makeEvent(
     description: "",
     modality: "IN_PERSON",
     meetingUrl: null,
+    groupUrl: null,
     pictureUrl: null,
     hostId: "u1",
     attendeeIds: [],

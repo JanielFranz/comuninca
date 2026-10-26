@@ -161,6 +161,7 @@ describe("listEvents query shape", () => {
         "endTime",
         "host",
         "id",
+        "groupUrl",
         "location",
         "meetingUrl",
         "modality",
@@ -179,13 +180,14 @@ describe("listEvents result", () => {
       {
         id: "e1",
         title: "Feria",
-        category: "food",
+        category: "expoferia",
         date: new Date("2026-07-17T00:00:00.000Z"),
         startTime: "09:00",
         endTime: "13:00",
         modality: "IN_PERSON",
         location: null,
         meetingUrl: null,
+        groupUrl: null,
         description: "d",
         pictureUrl: null,
         host: { id: "h1", fullName: "Ava Reyes" },
@@ -208,6 +210,71 @@ describe("listEvents result", () => {
     ])
     expect(r.people.map((p) => p.id).sort()).toEqual(["a2", "h1", "me-id"])
     expect(JSON.stringify(r)).not.toContain("@")
+  })
+
+  describe("group link privacy", () => {
+    const row = (
+      id: string,
+      hostId: string,
+      attendeeIds: string[],
+      groupUrl: string,
+    ) => ({
+      id,
+      title: id,
+      category: "convivencia",
+      date: new Date("2026-07-17T00:00:00.000Z"),
+      startTime: "09:00",
+      endTime: "10:00",
+      modality: "IN_PERSON",
+      location: "Plaza",
+      meetingUrl: null,
+      groupUrl,
+      description: "d",
+      pictureUrl: null,
+      host: { id: hostId, fullName: "Host " + hostId },
+      attendees: attendeeIds.map((userId) => ({
+        userId,
+        user: { fullName: "User " + userId },
+      })),
+    })
+    const links = {
+      hosted: "https://chat.whatsapp.com/HOSTED",
+      joined: "https://chat.whatsapp.com/JOINED",
+      other: "https://chat.whatsapp.com/OTHER",
+    }
+    beforeEach(() => {
+      findMany.mockResolvedValue([
+        row("hosted", "me-id", [], links.hosted),
+        row("joined", "h2", ["me-id", "a3"], links.joined),
+        row("other", "h3", ["a4"], links.other),
+      ])
+    })
+
+    it("returns the link only for events the viewer hosts or has joined", async () => {
+      const r = await listEvents()
+      if (!r.ok) throw new Error("expected ok")
+      const byId = Object.fromEntries(r.events.map((e) => [e.id, e.groupUrl]))
+      expect(byId).toEqual({
+        hosted: links.hosted,
+        joined: links.joined,
+        other: null,
+      })
+    })
+
+    it("never puts a withheld link anywhere in the payload", async () => {
+      const r = await listEvents()
+      expect(JSON.stringify(r)).not.toContain("OTHER")
+    })
+
+    it("an admin who has not joined is treated like everyone else", async () => {
+      requireUser.mockResolvedValue({
+        ok: true,
+        user: { ...me, id: "admin-id", role: "ADMIN" },
+      })
+      const r = await listEvents()
+      if (!r.ok) throw new Error("expected ok")
+      expect(r.events.map((e) => e.groupUrl)).toEqual([null, null, null])
+    })
   })
 
   it("a Prisma failure -> UNEXPECTED with no error text", async () => {

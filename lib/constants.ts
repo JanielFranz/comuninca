@@ -1,22 +1,27 @@
 import type { CategoryKey, CategoryMeta, User, CalendarEvent } from "./types"
 
 export const CATEGORY_META: Record<CategoryKey, CategoryMeta> = {
-  social: { label: "Social", color: "#E8AC3E" },
-  music: { label: "Música", color: "#E0708A" },
-  workshop: { label: "Taller", color: "#6E9CC4" },
-  sports: { label: "Deportes", color: "#7FB07A" },
-  food: { label: "Comida y Mercado", color: "#D98B4A" },
+  workshop: { label: "Workshop", color: "#6E9CC4" },
+  webinar: { label: "Webinar", color: "#E0708A" },
+  masterclass: { label: "MasterClass", color: "#E8AC3E" },
   networking: { label: "Networking", color: "#A480B8" },
+  expoferia: { label: "ExpoFeria", color: "#D98B4A" },
+  voluntariado: { label: "Voluntariado", color: "#7FB07A" },
+  convivencia: { label: "Convivencia", color: "#4FB0A5" },
 }
 
 export const CATEGORY_ORDER: CategoryKey[] = [
-  "social",
-  "music",
   "workshop",
-  "sports",
-  "food",
+  "webinar",
+  "masterclass",
   "networking",
+  "expoferia",
+  "voluntariado",
+  "convivencia",
 ]
+
+/** Pre-selected in the add-event form; also the fallback for unknown DB values. */
+export const DEFAULT_CATEGORY: CategoryKey = CATEGORY_ORDER[0]
 
 export const USERS: User[] = [
   { id: "u1", name: "Ava Reyes", initials: "AR" },
@@ -54,14 +59,14 @@ export const WEEKDAY_SHORT = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"]
 /** Prototype seed shape (no modality/meeting/picture); consumed by prisma/seed-data.ts only. */
 export type SeedEvent = Omit<
   CalendarEvent,
-  "modality" | "meetingUrl" | "pictureUrl"
+  "modality" | "meetingUrl" | "groupUrl" | "pictureUrl"
 >
 
 export const SEED_EVENTS: SeedEvent[] = [
   {
     id: "ev1",
     title: "Feria de Productores",
-    category: "food",
+    category: "expoferia",
     date: "2026-07-17",
     startTime: "09:00",
     endTime: "13:00",
@@ -74,7 +79,7 @@ export const SEED_EVENTS: SeedEvent[] = [
   {
     id: "ev2",
     title: "Social en la Azotea al Atardecer",
-    category: "social",
+    category: "convivencia",
     date: "2026-07-17",
     startTime: "18:30",
     endTime: "21:00",
@@ -87,7 +92,7 @@ export const SEED_EVENTS: SeedEvent[] = [
   {
     id: "ev3",
     title: "Fútbol 5 Amistoso",
-    category: "sports",
+    category: "convivencia",
     date: "2026-07-18",
     startTime: "16:00",
     endTime: "17:30",
@@ -112,7 +117,7 @@ export const SEED_EVENTS: SeedEvent[] = [
   {
     id: "ev5",
     title: "Yoga en el Parque",
-    category: "sports",
+    category: "convivencia",
     date: "2026-07-08",
     startTime: "07:00",
     endTime: "08:00",
@@ -125,7 +130,7 @@ export const SEED_EVENTS: SeedEvent[] = [
   {
     id: "ev6",
     title: "Noche de Jam con Guitarra",
-    category: "music",
+    category: "convivencia",
     date: "2026-07-08",
     startTime: "19:00",
     endTime: "21:00",
@@ -150,7 +155,7 @@ export const SEED_EVENTS: SeedEvent[] = [
   {
     id: "ev8",
     title: "Sesión de Jazz en Vivo",
-    category: "music",
+    category: "convivencia",
     date: "2026-07-21",
     startTime: "20:00",
     endTime: "22:30",
@@ -176,7 +181,7 @@ export const SEED_EVENTS: SeedEvent[] = [
   {
     id: "ev10",
     title: "Clase de Prueba de Cerámica",
-    category: "workshop",
+    category: "masterclass",
     date: "2026-07-24",
     startTime: "11:00",
     endTime: "13:00",
@@ -189,7 +194,7 @@ export const SEED_EVENTS: SeedEvent[] = [
   {
     id: "ev11",
     title: "Día de Limpieza Comunitaria",
-    category: "social",
+    category: "voluntariado",
     date: "2026-07-28",
     startTime: "09:00",
     endTime: "11:00",
@@ -202,7 +207,7 @@ export const SEED_EVENTS: SeedEvent[] = [
   {
     id: "ev12",
     title: "Fiesta de Verano en la Cuadra",
-    category: "social",
+    category: "convivencia",
     date: "2026-07-31",
     startTime: "17:00",
     endTime: "23:00",

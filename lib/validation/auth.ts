@@ -1,13 +1,15 @@
 import { z } from "zod"
+import { parseUtcDateKey, todayKeyInLima } from "@/lib/dateUtils"
 import { STRINGS } from "@/lib/strings"
 
 const t = STRINGS.register
 
 export const FULL_NAME_MAX = 100
+// Earliest accepted birthday ("YYYY-MM-DD"); anything older is a typo.
+export const BIRTHDAY_MIN = "1900-01-01"
 export const PASSWORD_MIN = 8
 // bcrypt (used by Supabase Auth) ignores bytes past 72.
 export const PASSWORD_MAX = 72
-export const INVITE_CODE_INPUT_MAX = 64
 
 export const registerSchema = z.object({
   fullName: z
@@ -15,16 +17,21 @@ export const registerSchema = z.object({
     .trim()
     .min(1, t.fullNameRequired)
     .max(FULL_NAME_MAX, t.fullNameTooLong),
+  // "YYYY-MM-DD", as sent by <input type="date">. "Today" is read at parse time.
+  birthday: z
+    .string(t.birthdayRequired)
+    .trim()
+    .min(1, t.birthdayRequired)
+    .refine(
+      (v) => parseUtcDateKey(v) !== null && v >= BIRTHDAY_MIN,
+      t.birthdayInvalid,
+    )
+    .refine((v) => v <= todayKeyInLima(), t.birthdayFuture),
   email: z.string(t.emailInvalid).trim().pipe(z.email(t.emailInvalid)),
   password: z
     .string(t.passwordTooShort)
     .min(PASSWORD_MIN, t.passwordTooShort)
     .max(PASSWORD_MAX, t.passwordTooLong),
-  code: z
-    .string(t.codeRequired)
-    .trim()
-    .min(1, t.codeRequired)
-    .max(INVITE_CODE_INPUT_MAX, t.codeInvalid),
 })
 
 export type RegisterInput = z.infer<typeof registerSchema>

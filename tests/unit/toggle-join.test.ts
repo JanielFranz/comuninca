@@ -78,7 +78,7 @@ describe("toggleJoin event existence", () => {
     expect(findUnique).toHaveBeenCalledTimes(1)
     expect(findUnique).toHaveBeenCalledWith({
       where: { id: "ev-1" },
-      select: { id: true },
+      select: { id: true, groupUrl: true },
     })
     expect(create).not.toHaveBeenCalled()
     expect(del).not.toHaveBeenCalled()
@@ -104,9 +104,22 @@ describe("toggleJoin first toggle (join)", () => {
     expect(create).toHaveBeenCalledWith({
       data: { eventId: "ev-1", userId: "me-id" },
     })
-    expect(r).toEqual({ ok: true, joined: true })
+    expect(r).toEqual({ ok: true, joined: true, groupUrl: null })
     expect(del).not.toHaveBeenCalled()
     expect(revalidatePath).toHaveBeenCalledWith("/calendar")
+  })
+
+  it("joining hands back the event's group link", async () => {
+    findUnique.mockResolvedValue({
+      id: "ev-1",
+      groupUrl: "https://chat.whatsapp.com/AbCdEf123456",
+    })
+    const r = await toggleJoin({ eventId: "ev-1" })
+    expect(r).toEqual({
+      ok: true,
+      joined: true,
+      groupUrl: "https://chat.whatsapp.com/AbCdEf123456",
+    })
   })
 })
 
@@ -119,8 +132,19 @@ describe("toggleJoin second toggle (leave)", () => {
     expect(del).toHaveBeenCalledWith({
       where: { eventId_userId: { eventId: "ev-1", userId: "me-id" } },
     })
-    expect(r).toEqual({ ok: true, joined: false })
+    expect(r).toEqual({ ok: true, joined: false, groupUrl: null })
     expect(revalidatePath).toHaveBeenCalledWith("/calendar")
+  })
+
+  it("leaving never returns the group link, even when the event has one", async () => {
+    findUnique.mockResolvedValue({
+      id: "ev-1",
+      groupUrl: "https://chat.whatsapp.com/AbCdEf123456",
+    })
+    create.mockRejectedValue(P2002)
+    const r = await toggleJoin({ eventId: "ev-1" })
+    expect(r).toEqual({ ok: true, joined: false, groupUrl: null })
+    expect(JSON.stringify(r)).not.toContain("whatsapp")
   })
 })
 
@@ -129,7 +153,7 @@ describe("toggleJoin race: create P2002 then delete P2025", () => {
     create.mockRejectedValue(P2002)
     del.mockRejectedValue(P2025)
     const r = await toggleJoin({ eventId: "ev-1" })
-    expect(r).toEqual({ ok: true, joined: false })
+    expect(r).toEqual({ ok: true, joined: false, groupUrl: null })
     expect(revalidatePath).toHaveBeenCalledWith("/calendar")
   })
 })

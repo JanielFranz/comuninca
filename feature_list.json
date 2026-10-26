@@ -189,7 +189,7 @@
         "lib/validation/auth.ts",
         "lib/strings.ts"
       ],
-      "description": "Register page (es-PE, copy in lib/strings.ts) with full name, email, password, and invite/access code — Zod registerSchema shared client/server. Server Action register: (1) code required (AC 1.1.2); (2) code must exist and be UNUSED (not USED/EXPIRED) (AC 1.1.3); (3) email not already registered (AC 1.1.6); (4) in ONE prisma.$transaction: supabase.auth.signUp → update the trigger-created public.User (fullName, inviteCodeId, role=USER — never ADMIN, AC 1.1.5) → mark the code USED with usedBy/usedAt (AC 2.2.7); any auth failure rolls the code consumption back. Success issues a session and redirects into the onboarding gate (feature 11).",
+      "description": "Register page (es-PE, copy in lib/strings.ts) with full name, birthday, email and password — Zod registerSchema shared client/server. REGISTRATION IS OPEN: no invite/access code is asked for, checked or consumed (ACs 1.1.2/1.1.3 retired; originally the feature required a single-use code). Server Action register: (1) email not already registered (AC 1.1.6); (2) create the pre-confirmed auth user, then update the trigger-created public.User (fullName, birthday, role=USER — never ADMIN, AC 1.1.5; inviteCodeId stays null); a failure after the auth user exists deletes it. Success issues a session and redirects into the onboarding gate (feature 11).",
       "acceptance": [
         "Valid unused code + valid fields creates the account, consumes the code (USED + usedBy/usedAt), and starts a session",
         "Missing code, invalid/used/expired code, or duplicate email each show their specific error and create nothing",
@@ -212,7 +212,7 @@
         "proxy.ts",
         "lib/strings.ts"
       ],
-      "description": "Gate: proxy + Server Component check — an authenticated USER with onboardingCompleted=false is forced to /onboarding before reaching /calendar; admins never see it (AC 1.4.8). Form (es-PE, copy in lib/strings.ts per AC 1.4.9): Profesión optional, Ocupación mandatory, Ikigai optional (AC 1.4.2). Zod onboardingSchema enforces occupation required (AC 1.4.3). Submit persists the three fields, flips onboardingCompleted=true, and lands on /calendar (AC 1.4.4). The form cannot be dismissed/skipped without Ocupación (AC 1.4.6) and is never shown again once completed (AC 1.4.5).",
+      "description": "Gate: proxy + Server Component check — an authenticated USER with onboardingCompleted=false is forced to /onboarding before reaching /calendar; admins never see it (AC 1.4.8). Form (es-PE, copy in lib/strings.ts per AC 1.4.9): Profesión optional, Ocupación mandatory, Ikigai optional (AC 1.4.2), each with a short explanation under its label (AC 1.4.10). Zod onboardingSchema enforces occupation required (AC 1.4.3). Submit persists the three fields, flips onboardingCompleted=true, and lands on /calendar (AC 1.4.4). The form cannot be dismissed/skipped without Ocupación (AC 1.4.6) and is never shown again once completed (AC 1.4.5).",
       "acceptance": [
         "First login lands on /onboarding; submitting with Ocupación empty is blocked with an error",
         "Valid submit persists all three fields, flips the flag, and lands on /calendar",
@@ -295,7 +295,7 @@
         "lib/validation/events.ts",
         "lib/strings.ts"
       ],
-      "description": "Wire AddEventModal to Server Action createEvent (requires user). Fields per AC 3.1.1: title, category (kept as the prototype's six options until the owner defines the final set), date, start/end time, modality (Presencial/Virtual selector), location, description, picture (feature 16). Zod eventSchema carries every rule with its es-PE message: all fields required — 'Todos los campos son obligatorios.' (AC 3.1.2); no past date (AC 3.1.5); today + already-passed start time blocked (AC 3.1.6); end must be after start (AC 3.1.7); Virtual ⇒ location NOT required and meetingUrl optional (AC 3.1.9); Presencial ⇒ location required (AC 3.1.10); meetingUrl persisted when provided (AC 3.1.11). Valid submit persists the event with the signed-in user as host, shows the 'Evento agregado al calendario' toast, closes the modal, and revalidates the calendar (AC 3.1.3). Empty-day and day-modal entry points keep pre-filling the date (AC 3.1.4).",
+      "description": "Wire AddEventModal to Server Action createEvent (requires user). Fields per AC 3.1.1: title, category (one of the seven defined in AC 3.1.1: Workshop, Webinar, MasterClass, Networking, ExpoFeria, Voluntariado, Convivencia), date, start/end time, modality (Presencial/Virtual selector), location, description, picture (feature 16). Zod eventSchema carries every rule with its es-PE message: all fields required — 'Todos los campos son obligatorios.' (AC 3.1.2); no past date (AC 3.1.5); today + already-passed start time blocked (AC 3.1.6); end must be after start (AC 3.1.7); Virtual ⇒ location NOT required and meetingUrl optional (AC 3.1.9); Presencial ⇒ location required (AC 3.1.10); meetingUrl persisted when provided (AC 3.1.11). Valid submit persists the event with the signed-in user as host, shows the 'Evento agregado al calendario' toast, closes the modal, and revalidates the calendar (AC 3.1.3). Empty-day and day-modal entry points keep pre-filling the date (AC 3.1.4). Optional groupUrl (WhatsApp or other group link, http(s) only) is stored on the Event (AC 3.1.12).",
       "acceptance": [
         "Each invalid case (empty required field, past date, past start time today, end ≤ start, Presencial without address) shows its exact message and creates nothing",
         "Virtual without an address succeeds with no location stored; Virtual with a link stores meetingUrl",
@@ -335,7 +335,7 @@
       "plan_ref": "user-stories.md US 3.2",
       "depends_on": [14],
       "paths": ["components/EventDetailModal.tsx", "lib/actions/events.ts"],
-      "description": "Server Action toggleJoin(eventId): requires user; if an EventAttendee row (eventId, userId) exists → delete (leave), else → create (join); revalidate the calendar. EventDetailModal button reflects membership: 'Unirme al evento' ↔ 'Ya vas ✓' (AC 3.2.1/3.2.2); attendee list + 'ASISTEN (N)' count update from the DB (AC 3.2.3); the host renders as 'Tú' when the viewer is the host (AC 3.2.4). The EventAttendee composite PK makes double-join impossible.",
+      "description": "Server Action toggleJoin(eventId): requires user; if an EventAttendee row (eventId, userId) exists → delete (leave), else → create (join); revalidate the calendar. EventDetailModal button reflects membership: 'Unirme al evento' ↔ 'Ya vas ✓' (AC 3.2.1/3.2.2); attendee list + 'ASISTEN (N)' count update from the DB (AC 3.2.3); the host renders as 'Tú' when the viewer is the host (AC 3.2.4). The EventAttendee composite PK makes double-join impossible. Joining reveals the event's groupUrl (toggleJoin returns it; listEvents only includes it for the host and attendees) (AC 3.2.5).",
       "acceptance": [
         "Joining adds the current user and switches the button to 'Ya vas ✓'; clicking again removes them and reverts it",
         "Attendee count and list update after each toggle",
@@ -395,7 +395,7 @@
         "lib/selectors.ts",
         "lib/strings.ts"
       ],
-      "description": "EventDetailModal renders the full DB-backed event: category label + color, date + time range (es-PE), modality display — Presencial shows the physical address; Virtual shows a 'Virtual' label plus meetingUrl as a clickable link when provided (AC 3.4.1) — description, the uploaded picture at its fixed size (AC 3.4.4), host name/initials, and the attendee list with 'Nadie aún — sé el primero en unirte.' when empty (AC 3.4.2). Closes via Esc/close button/backdrop without losing calendar state (AC 3.4.3). Identical behavior from every entry point: week overlap card, day-modal item, month day (AC 3.4.5).",
+      "description": "EventDetailModal renders the full DB-backed event: category label + color, date + time range (es-PE), modality display — Presencial shows the physical address; Virtual shows a 'Virtual' label plus meetingUrl as a clickable link when provided (AC 3.4.1) — description, the uploaded picture at its fixed size (AC 3.4.4), host name/initials, and the attendee list with 'Nadie aún — sé el primero en unirte.' when empty (AC 3.4.2). Closes via Esc/close button/backdrop without losing calendar state (AC 3.4.3). Identical behavior from every entry point: week overlap card, day-modal item, month day (AC 3.4.5). The group link, when present for the viewer (host/attendee), shows as a clickable 'GRUPO DEL EVENTO' link (AC 3.4.6).",
       "acceptance": [
         "Virtual events show the 'Virtual' label + clickable link; Presencial events show the address",
         "The picture renders at the fixed size; an empty attendee list shows the empty-state copy",

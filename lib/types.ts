@@ -1,5 +1,11 @@
 export type CategoryKey =
-  "social" | "music" | "workshop" | "sports" | "food" | "networking"
+  | "workshop"
+  | "webinar"
+  | "masterclass"
+  | "networking"
+  | "expoferia"
+  | "voluntariado"
+  | "convivencia"
 
 export interface CategoryMeta {
   label: string
@@ -34,6 +40,11 @@ export interface CalendarEvent {
   /** Carried for features #15/#16/#20; not rendered yet. */
   modality: EventModality
   meetingUrl: string | null
+  /**
+   * WhatsApp (or other) group link. Private: the server only fills it in for
+   * the host and the people who joined; null for everyone else.
+   */
+  groupUrl: string | null
   pictureUrl: string | null
   /** Real User["id"] of the host. */
   hostId: string
@@ -52,6 +63,8 @@ export interface EventFormState {
   modality: EventModality
   /** One input: the address (Presencial) or the optional meeting link (Virtual). */
   location: string
+  /** Optional WhatsApp (or other) group link; "" when none. */
+  groupUrl: string
   description: string
   error: string
   /** Base64 `data:image/jpeg;base64,...` URL once resized; "" when none (feature #16). */
@@ -62,6 +75,17 @@ export interface EventFormState {
   pictureStatus: PictureStatus
   /** Object URL for the thumbnail preview; "" when none. Revoked when replaced/cleared. */
   picturePreviewUrl: string
+}
+
+/**
+ * A join/leave click flips this instantly so the button feels responsive,
+ * ahead of the server round trip (see `applyOptimisticJoin`).
+ */
+export interface OptimisticJoin {
+  eventId: string
+  joined: boolean
+  /** Group link handed back by `toggleJoin` once the join succeeded. */
+  groupUrl?: string | null
 }
 
 export type CalendarView = "month" | "week"
@@ -166,6 +190,8 @@ export interface ActiveEventView {
   modality: EventModality
   /** Virtual only; null for IN_PERSON or when no link was provided (feature #20). */
   meetingUrl: string | null
+  /** Group link, only for the host and attendees; null for everyone else. */
+  groupUrl: string | null
   hostInitials: string
   hostName: string
   attendees: { initials: string }[]

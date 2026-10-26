@@ -10,9 +10,15 @@ import type {
   CurrentUser,
   EventFormState,
   EventModality,
+  OptimisticJoin,
   User,
 } from "@/lib/types"
-import { CONFIG, MOBILE_BREAKPOINT, TINY_BREAKPOINT } from "@/lib/constants"
+import {
+  CONFIG,
+  DEFAULT_CATEGORY,
+  MOBILE_BREAKPOINT,
+  TINY_BREAKPOINT,
+} from "@/lib/constants"
 import {
   computeNavStep,
   dateKey,
@@ -22,6 +28,7 @@ import {
   parseDateKey,
 } from "@/lib/dateUtils"
 import {
+  applyOptimisticJoin,
   buildActiveEvent,
   buildCategoryOptions,
   buildDayModalEvents,
@@ -62,26 +69,20 @@ interface AppState {
   eventForm: EventFormState
 }
 
-/**
- * A join/leave click flips this instantly so the button feels responsive,
- * ahead of the server round trip. It is reconciled against reality (cleared)
- * as soon as a fresh `events` prop arrives from `router.refresh()` — see the
- * effect below — so it can never permanently drift from the real DB state.
- */
-interface OptimisticJoin {
-  eventId: string
-  joined: boolean
-}
+// The optimistic join/leave (`OptimisticJoin`) is reconciled against reality
+// (cleared) as soon as a fresh `events` prop arrives from `router.refresh()` —
+// see the check below — so it can never permanently drift from the real DB state.
 
 function emptyForm(dateStr: string): EventFormState {
   return {
     title: "",
-    category: "social",
+    category: DEFAULT_CATEGORY,
     date: dateStr,
     startTime: "18:00",
     endTime: "19:00",
     modality: "IN_PERSON",
     location: "",
+    groupUrl: "",
     description: "",
     error: "",
     picture: "",
@@ -373,6 +374,7 @@ export default function CalendarApp({
       modality: f.modality,
       location: isVirtual ? "" : f.location,
       meetingUrl: isVirtual ? f.location : "",
+      groupUrl: f.groupUrl,
       description: f.description,
       picture: f.picture || undefined,
     }
@@ -448,6 +450,11 @@ export default function CalendarApp({
     startJoin(async () => {
       const result = await toggleJoin({ eventId: id })
       if (result.ok) {
+        // Joining unlocks the group link: show it now, without waiting for
+        // the refresh below to bring it in with the server events.
+        setOptimisticJoin((o) =>
+          o && o.eventId === id ? { ...o, groupUrl: result.groupUrl } : o,
+        )
         router.refresh()
         return
       }
@@ -478,18 +485,10 @@ export default function CalendarApp({
   // Server events are the source of truth; only a short-lived optimistic
   // flip (cleared by the effect above once fresh props land) is layered on
   // top, purely so the join button feels instant.
-  const events = useMemo(() => {
-    if (!optimisticJoin) return serverEvents
-    return serverEvents.map((ev) => {
-      if (ev.id !== optimisticJoin.eventId) return ev
-      const currentlyGoing = ev.attendeeIds.indexOf(user.id) >= 0
-      if (currentlyGoing === optimisticJoin.joined) return ev
-      const attendeeIds = optimisticJoin.joined
-        ? [...ev.attendeeIds, user.id]
-        : ev.attendeeIds.filter((id) => id !== user.id)
-      return { ...ev, attendeeIds }
-    })
-  }, [serverEvents, optimisticJoin, user.id])
+  const events = useMemo(
+    () => applyOptimisticJoin(serverEvents, optimisticJoin, user.id),
+    [serverEvents, optimisticJoin, user.id],
+  )
   const name =
     displayName(user.fullName, user.email) || STRINGS.fallbackUserName
   const currentUser: CurrentUser = {
@@ -593,6 +592,7 @@ export default function CalendarApp({
           onEndChange={(v) => updateForm("endTime", v)}
           onModalityChange={(v: EventModality) => updateForm("modality", v)}
           onLocationChange={(v) => updateForm("location", v)}
+          onGroupUrlChange={(v) => updateForm("groupUrl", v)}
           onDescriptionChange={(v) => updateForm("description", v)}
           onPictureSelect={handlePictureSelect}
           onSubmit={submitForm}

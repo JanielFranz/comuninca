@@ -21,6 +21,7 @@ interface AddEventModalProps {
   onEndChange: (value: string) => void
   onModalityChange: (value: EventModality) => void
   onLocationChange: (value: string) => void
+  onGroupUrlChange: (value: string) => void
   onDescriptionChange: (value: string) => void
   /** A picture was selected (resize/validation runs immediately); null clears it. */
   onPictureSelect: (file: File | null) => void
@@ -39,6 +40,7 @@ export default function AddEventModal({
   onEndChange,
   onModalityChange,
   onLocationChange,
+  onGroupUrlChange,
   onDescriptionChange,
   onPictureSelect,
   onSubmit,
@@ -178,6 +180,23 @@ export default function AddEventModal({
           }
           className={styles.textInput}
         />
+
+        <label className={styles.label} htmlFor="event-group-url">
+          {t.groupUrlLabel}
+        </label>
+        <input
+          id="event-group-url"
+          type="url"
+          autoComplete="off"
+          value={form.groupUrl}
+          onChange={(e) => onGroupUrlChange(e.target.value)}
+          placeholder={t.groupUrlPlaceholder}
+          aria-describedby="event-group-url-hint"
+          className={styles.textInputTight}
+        />
+        <div id="event-group-url-hint" className={styles.fieldHint}>
+          {t.groupUrlHint}
+        </div>
 
         <label className={styles.label} htmlFor="event-description">
           {t.descriptionLabel}

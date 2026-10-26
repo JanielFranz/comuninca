@@ -38,7 +38,7 @@ const me = {
 }
 const input = {
   title: "  Feria  ",
-  category: "food",
+  category: "expoferia",
   date: "2026-09-27",
   startTime: "18:00",
   endTime: "19:00",
@@ -144,35 +144,75 @@ describe("createEvent persistence", () => {
     expect(create.mock.calls[0][0]).toEqual({
       data: {
         title: "Feria",
-        category: "food",
+        category: "expoferia",
         date: new Date("2026-09-27T00:00:00.000Z"),
         startTime: "18:00",
         endTime: "19:00",
         modality: "IN_PERSON",
         location: "Av. Larco 1",
         meetingUrl: null,
+        groupUrl: null,
         description: "Rica comida",
         hostId: "me-id",
       },
     })
     expect(r).toEqual({
       ok: true,
-      event: mapEventRow({
-        id: "ev-1",
-        title: "Feria",
-        category: "food",
-        date: new Date("2026-09-27T00:00:00.000Z"),
-        startTime: "18:00",
-        endTime: "19:00",
-        modality: "IN_PERSON",
-        location: "Av. Larco 1",
-        meetingUrl: null,
-        description: "Rica comida",
-        pictureUrl: null,
-        host: { id: "me-id", fullName: "Luz Quispe" },
-        attendees: [],
-      }),
+      event: mapEventRow(
+        {
+          id: "ev-1",
+          title: "Feria",
+          category: "expoferia",
+          date: new Date("2026-09-27T00:00:00.000Z"),
+          startTime: "18:00",
+          endTime: "19:00",
+          modality: "IN_PERSON",
+          location: "Av. Larco 1",
+          meetingUrl: null,
+          groupUrl: null,
+          description: "Rica comida",
+          pictureUrl: null,
+          host: { id: "me-id", fullName: "Luz Quispe" },
+          attendees: [],
+        },
+        "me-id",
+      ),
     })
+  })
+
+  it("stores the group link trimmed and returns it to its host", async () => {
+    const link = "https://chat.whatsapp.com/AbCdEf123456"
+    const r = await createEvent({ ...input, groupUrl: ` ${link} ` })
+    expect(createdData()).toMatchObject({ groupUrl: link })
+    expect(r).toMatchObject({ ok: true, event: { groupUrl: link } })
+  })
+  it("works for Virtual events too, next to the meeting link", async () => {
+    const link = "https://chat.whatsapp.com/AbCdEf123456"
+    await createEvent({
+      ...input,
+      modality: "VIRTUAL",
+      location: "",
+      meetingUrl: "https://meet.example.com/x",
+      groupUrl: link,
+    })
+    expect(createdData()).toMatchObject({
+      meetingUrl: "https://meet.example.com/x",
+      groupUrl: link,
+    })
+  })
+  it.each([
+    ["javascript:alert(1)"],
+    ["ftp://x.com/g"],
+    ["chat.whatsapp.com/AbCdEf"],
+  ])("invalid group link %j -> INVALID_INPUT, nothing created", async (g) => {
+    const r = await createEvent({ ...input, groupUrl: g })
+    expect(r).toMatchObject({
+      ok: false,
+      error: "INVALID_INPUT",
+      message: t.invalidGroupUrl,
+      field: "groupUrl",
+    })
+    expect(create).not.toHaveBeenCalled()
   })
   it("Virtual without address: location null", async () => {
     await createEvent({

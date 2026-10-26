@@ -5,26 +5,36 @@ import type { FormEvent } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { register } from "@/lib/actions/auth"
-import { checkRegisterInput } from "@/lib/validation/auth"
+import { BIRTHDAY_MIN, checkRegisterInput } from "@/lib/validation/auth"
 import type { RegisterField } from "@/lib/validation/auth"
 import { STRINGS } from "@/lib/strings"
 import styles from "./LoginScreen.module.css"
 
-const FIELD_ORDER: RegisterField[] = ["fullName", "email", "password", "code"]
+const FIELD_ORDER: RegisterField[] = [
+  "fullName",
+  "birthday",
+  "email",
+  "password",
+]
 
 export default function RegisterScreen() {
   const t = STRINGS.register
   const router = useRouter()
   const [fullName, setFullName] = useState("")
+  const [birthday, setBirthday] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [code, setCode] = useState("")
   const [error, setError] = useState("")
   const [isPending, startTransition] = useTransition()
 
   function onSubmit(e: FormEvent) {
     e.preventDefault()
-    const checked = checkRegisterInput({ fullName, email, password, code })
+    const checked = checkRegisterInput({
+      fullName,
+      birthday,
+      email,
+      password,
+    })
     if (!checked.valid) {
       const first = FIELD_ORDER.find((f) => checked.errors[f])
       setError(first ? checked.errors[first]! : t.invalidInput)
@@ -39,12 +49,6 @@ export default function RegisterScreen() {
         return
       }
       switch (result.error) {
-        case "CODE_REQUIRED":
-          setError(t.codeRequired)
-          break
-        case "CODE_INVALID":
-          setError(t.codeInvalid)
-          break
         case "EMAIL_IN_USE":
           setError(t.emailInUse)
           break
@@ -86,6 +90,22 @@ export default function RegisterScreen() {
               className={styles.input}
             />
 
+            <label className={styles.label} htmlFor="register-birthday">
+              {t.birthdayLabel}
+            </label>
+            <input
+              id="register-birthday"
+              type="date"
+              autoComplete="bday"
+              min={BIRTHDAY_MIN}
+              value={birthday}
+              onChange={(e) => {
+                setBirthday(e.target.value)
+                setError("")
+              }}
+              className={styles.input}
+            />
+
             <label className={styles.label} htmlFor="register-email">
               {t.emailLabel}
             </label>
@@ -116,24 +136,6 @@ export default function RegisterScreen() {
               }}
               placeholder={t.passwordPlaceholder}
               className={styles.input}
-            />
-
-            <label className={styles.label} htmlFor="register-code">
-              {t.codeLabel}
-            </label>
-            <input
-              id="register-code"
-              type="text"
-              autoComplete="off"
-              autoCapitalize="characters"
-              spellCheck={false}
-              value={code}
-              onChange={(e) => {
-                setCode(e.target.value)
-                setError("")
-              }}
-              placeholder={t.codePlaceholder}
-              className={styles.passwordInput}
             />
 
             {error && (

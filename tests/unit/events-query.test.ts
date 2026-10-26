@@ -162,15 +162,15 @@ describe("clampEventsWindow", () => {
 })
 
 describe("toCategoryKey", () => {
-  it("passes through all six known categories", () => {
-    expect(CATEGORY_ORDER).toHaveLength(6)
+  it("passes through all seven known categories", () => {
+    expect(CATEGORY_ORDER).toHaveLength(7)
     for (const k of CATEGORY_ORDER) expect(toCategoryKey(k)).toBe(k)
   })
 
-  it.each(["", "Fiesta", "SOCIAL", null, undefined, 3])(
+  it.each(["", "Fiesta", "WORKSHOP", "social", "food", null, undefined, 3])(
     "maps unknown %j to the safe default",
     (v) => {
-      expect(toCategoryKey(v)).toBe("social")
+      expect(toCategoryKey(v)).toBe("workshop")
     },
   )
 })
@@ -178,13 +178,14 @@ describe("toCategoryKey", () => {
 const row = (over: Partial<EventRow> = {}): EventRow => ({
   id: "e1",
   title: "T",
-  category: "music",
+  category: "convivencia",
   date: new Date("2026-07-17T00:00:00.000Z"),
   startTime: "18:00",
   endTime: "19:00",
   modality: "IN_PERSON",
   location: "Plaza",
   meetingUrl: null,
+  groupUrl: null,
   description: "D",
   pictureUrl: null,
   host: { id: "h1", fullName: "Ava Reyes" },
@@ -200,7 +201,7 @@ describe("mapEventRow", () => {
     expect(mapEventRow(row())).toEqual({
       id: "e1",
       title: "T",
-      category: "music",
+      category: "convivencia",
       date: "2026-07-17",
       startTime: "18:00",
       endTime: "19:00",
@@ -208,9 +209,37 @@ describe("mapEventRow", () => {
       description: "D",
       modality: "IN_PERSON",
       meetingUrl: null,
+      groupUrl: null,
       pictureUrl: null,
       hostId: "h1",
       attendeeIds: ["a1", "h1"],
+    })
+  })
+
+  describe("group link privacy", () => {
+    const GROUP = "https://chat.whatsapp.com/SECRET123"
+    const withGroup = () => row({ groupUrl: GROUP })
+
+    it("reveals it to the host", () => {
+      expect(mapEventRow(withGroup(), "h1").groupUrl).toBe(GROUP)
+    })
+    it("reveals it to an attendee", () => {
+      expect(mapEventRow(withGroup(), "a1").groupUrl).toBe(GROUP)
+    })
+    it("hides it from anyone who has not joined", () => {
+      expect(mapEventRow(withGroup(), "stranger").groupUrl).toBeNull()
+    })
+    it("fails closed: no viewer means no link", () => {
+      expect(mapEventRow(withGroup()).groupUrl).toBeNull()
+      expect(mapEventRow(withGroup(), undefined).groupUrl).toBeNull()
+    })
+    it("never leaks the link anywhere else in the mapped event", () => {
+      expect(JSON.stringify(mapEventRow(withGroup(), "stranger"))).not.toContain(
+        "SECRET123",
+      )
+    })
+    it("an event with no group stays null for the host too", () => {
+      expect(mapEventRow(row(), "h1").groupUrl).toBeNull()
     })
   })
 
@@ -230,7 +259,7 @@ describe("mapEventRow", () => {
   })
 
   it("maps an unknown category to the default", () => {
-    expect(mapEventRow(row({ category: "Otro" })).category).toBe("social")
+    expect(mapEventRow(row({ category: "Otro" })).category).toBe("workshop")
   })
 
   it("converts the date key identically under Pacific/Auckland and America/Lima", () => {

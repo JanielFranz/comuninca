@@ -90,12 +90,15 @@ design error — stop and report.
   defense-in-depth, not the primary control.
 - **`redirect()` / `notFound()` are render-layer only.** Do not call them from
   programmatically-invoked Server Actions — return a typed result instead
-  (e.g. `{ error: "CODE_INVALID" }`). Reserve them for pages.
+  (e.g. `{ error: "EMAIL_IN_USE" }`). Reserve them for pages.
 - **All copy in `lib/strings.ts` (es-PE).** No hard-coded user-facing strings
   in components; dates/times only via `lib/dateUtils.ts` (`Intl` es-PE).
-- **Category stays a string.** Per US 3.1.1 the event category set is "to be
-  defined" by the owner — until then keep the prototype's six options; do not
-  invent new ones.
+- **Category stays a string.** Per US 3.1.1 the event category set is fixed by
+  the owner to seven keys (`CATEGORY_ORDER` in `lib/constants.ts`: workshop,
+  webinar, masterclass, networking, expoferia, voluntariado, convivencia); do
+  not invent new ones. Changing the set means updating `CATEGORY_META`/
+  `CATEGORY_ORDER`, the seed events, the golden master, and adding a data
+  migration for rows that carry a retired key.
 
 ## 4. Prototype awareness
 

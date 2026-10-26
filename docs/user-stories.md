@@ -38,33 +38,41 @@ in-memory prototype implementation.
 
 ## Epic 1 — Roles & Authentication
 
-### US 1.1 — Register a normal-user account using an invite/access code
+### US 1.1 — Register a normal-user account
 
-**As a** visitor with a valid invite/access code,
+> **Registration is open.** It originally required a single-use invite/access
+> code (ACs 1.1.2 and 1.1.3, retired below). The code is no longer asked for,
+> checked or consumed when registering. The admin code tooling (US 2.2, US 2.3)
+> still exists but no longer gates access.
+
+**As a** visitor,
 **I want** to create my own account in the app,
 **So that** I can participate in the community as a normal user.
 
 **Acceptance criteria**
 
 - **AC 1.1.1** — Given a visitor is on the login screen, when they choose the
-  "register" option, then a registration form is shown requesting at least:
-  full name, email, password, and an invite/access code.
-- **AC 1.1.2** — Given the visitor submits the form without an invite/access
-  code, when the form is validated, then submission is blocked and an error
-  message indicates the code is required.
-- **AC 1.1.3** — Given the visitor enters an invite/access code that does not
-  exist or has already been used/expired, when they submit, then registration is
-  rejected and an error message indicates the code is invalid.
-- **AC 1.1.4** — Given the visitor enters a valid, unused invite/access code
-  and all other required fields are correct, when they submit, then:
-  - a new normal-user account is created,
-  - the invite/access code is marked as consumed/used (single-use),
+  "register" option, then a registration form is shown requesting exactly:
+  full name, birthday, email and password. No invite/access code is requested.
+- **AC 1.1.2** — _Retired (open registration)._ Previously: submitting
+  without an invite/access code was blocked.
+- **AC 1.1.3** — _Retired (open registration)._ Previously: an unknown, used or
+  expired code rejected the registration.
+- **AC 1.1.4** — Given the visitor fills in all required fields correctly, when
+  they submit, then:
+  - a new normal-user account is created (with no invite/access code linked),
   - the user is redirected to the calendar screen in an authenticated session.
+    Any `code` value sent by an outdated client is ignored.
 - **AC 1.1.5** — Given the registration succeeds, when the new account is
   created, then the account's role is "normal user" by default (never "admin").
 - **AC 1.1.6** — Given a visitor attempts to register with an email that is
   already registered, when they submit, then registration is rejected with a
   clear "email already in use" message.
+- **AC 1.1.7** — Given the visitor leaves the birthday empty, or enters a date
+  that is not a real calendar day, lies in the future (Lima time), or is before
+  1900-01-01, when the form is validated, then submission is blocked and an
+  error message indicates the birthday is required or invalid. On success the
+  birthday is stored on the new account (shown in the admin table, AC 2.1.2).
 
 ### US 1.2 — Log in with role-aware redirection
 
@@ -124,6 +132,16 @@ login,
 - **AC 1.4.9** — Given all copy must remain in Spanish (es-PE), when the form is
   rendered, then labels ("Profesión", "Ocupación", "Ikigai"), placeholders, and
   validation messages live alongside the existing strings in `lib/strings.ts`.
+- **AC 1.4.10** — Given the onboarding form is displayed, when the user looks at
+  each field, then a short explanation is shown under its label, because the
+  three are easy to confuse:
+  - **Profesión** — what the person studied (their career or training),
+  - **Ocupación** — what they do for a living today, which may differ from
+    their profesión,
+  - **Ikigai** — their purpose in life.
+
+  Each explanation is associated with its field for assistive technology
+  (`aria-describedby`) and lives in `lib/strings.ts` (AC 1.4.9).
 
 ### US 1.3 — Log out
 
@@ -200,6 +218,8 @@ login,
 - **AC 2.2.7** — Given a code is created as single-use, when a visitor
   successfully registers with it, then its status becomes "used" and any further
   registration attempt with the same code is rejected (see US 1.1.3).
+  _Superseded: registration no longer takes a code, so registering never
+  consumes one (see the note under US 1.1)._
 - **AC 2.2.8** — Given the admin has reviewed the generated codes, when they
   close the popup, then the codes remain available in the codes list (see US 2.3)
   and the admin is returned to the admin dashboard.
@@ -238,10 +258,11 @@ login,
 **Acceptance criteria**
 
 - **AC 3.1.1** — Given an authenticated normal user is on the calendar, when
-  they open the "Agregar evento" modal, then a form is shown with fields: title, category (I will define it later),
-  date, start time, end time, **modality (Presencial / Virtual)**, location
+  they open the "Agregar evento" modal, then a form is shown with fields: title, category (one of: Workshop, Webinar,
+  MasterClass, Networking, ExpoFeria, Voluntariado, Convivencia), date, start time, end time, **modality (Presencial / Virtual)**, location
   (physical address when "Presencial", or an optional meeting link/URL when
-  "Virtual"), description, and they can upload a picture (fixed size).
+  "Virtual"), an optional group link (WhatsApp or any other group URL),
+  description, and they can upload a picture (fixed size).
 - **AC 3.1.2** — Given the user submits the form with a required field empty
   (title, category, date, start time, end time, description, or — when modality
   is "Presencial" — the physical address), when validation runs, then submission
@@ -280,6 +301,11 @@ login,
   when the event is saved, then the link is stored with the event and shown to
   other users in the event detail (see US 3.4) so they can join the online
   session.
+- **AC 3.1.12** — Given the user fills in the optional group link (a WhatsApp
+  group or any other group URL), when the event is saved, then the link is
+  stored with the event for either modality. An empty link is allowed; a link
+  that is not an absolute http(s) URL blocks submission with "El enlace del
+  grupo no es válido.".
 
 ### US 3.2 — Join an event
 
@@ -302,6 +328,11 @@ login,
 - **AC 3.2.4** — Given the user is the host of an event, when the event detail
   is shown, then the host is displayed as "Tú" and the user is implicit
   (consistent with current `buildActiveEvent` behavior).
+- **AC 3.2.5** — Given an event has a group link (AC 3.1.12), when a user who
+  has not joined views it, then the link is not shown and is not sent to them;
+  when they click "Unirme al evento", then the group link is shown to them in
+  the event detail. It is also always shown to the event's host, and is hidden
+  again if the user leaves.
 
 ### US 3.3 — Browse events on the calendar
 
@@ -393,6 +424,9 @@ login,
   or a month-view day), when the modal opens, then the same full detail view and
   join/leave action (US 3.2) are available regardless of where it was opened
   from.
+- **AC 3.4.6** — Given the event has a group link and the viewer is its host or
+  has joined it (AC 3.2.5), when the detail modal renders, then a "GRUPO DEL
+  EVENTO" section shows the link as a clickable URL that opens in a new tab.
 
 ---
 

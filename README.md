@@ -22,9 +22,9 @@ demo login, exactly like the original — no real auth).
 A single-page community events calendar:
 
 - **Login** → demo auth, any credentials work.
-- **Calendar** → month and week views, with a legend for six event
-  categories (Social, Música, Taller, Deportes, Comida y Mercado,
-  Networking).
+- **Calendar** → month and week views, with a legend for seven event
+  categories (Workshop, Webinar, MasterClass, Networking, ExpoFeria,
+  Voluntariado, Convivencia).
 - **Add event** → modal form with category, date/time, location,
   description, and attendee picker.
 - **Day view** → clicking a day with events opens a list; clicking an empty

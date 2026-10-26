@@ -29,6 +29,12 @@ export function isValidMeetingUrl(value: string): boolean {
   }
 }
 
+/**
+ * Group link (WhatsApp, Telegram, Discord...): same rules as the meeting link —
+ * an absolute http(s) URL, so `javascript:` and similar can never be stored.
+ */
+export const isValidGroupUrl = isValidMeetingUrl
+
 /** Only invisible/format/control/blank-glyph characters: nothing visible. */
 const INVISIBLE_ONLY = /^[\s\p{Cf}\p{Cc}\u115F\u1160\u3164\uFFA0\u2800]*$/u
 const ANY_CONTROL = /\p{Cc}/u
@@ -62,6 +68,7 @@ export type EventField =
   | "modality"
   | "location"
   | "meetingUrl"
+  | "groupUrl"
   | "description"
 
 export interface EventData {
@@ -76,6 +83,8 @@ export interface EventData {
   location: string | null
   /** Virtual only, http(s); null otherwise. */
   meetingUrl: string | null
+  /** Optional group link (either modality), http(s); null when not provided. */
+  groupUrl: string | null
   description: string
 }
 
@@ -100,6 +109,7 @@ export function createEventSchema(now: Date = new Date()) {
         modality: text,
         location: text,
         meetingUrl: rawText,
+        groupUrl: rawText,
         description: text,
       }),
     )
@@ -148,6 +158,9 @@ export function createEventSchema(now: Date = new Date()) {
       ) {
         return fail(t.invalidMeetingUrl, "meetingUrl")
       }
+      if (v.groupUrl !== "" && !isValidGroupUrl(v.groupUrl)) {
+        return fail(t.invalidGroupUrl, "groupUrl")
+      }
     })
     .transform((v): EventData => ({
       title: v.title,
@@ -159,6 +172,7 @@ export function createEventSchema(now: Date = new Date()) {
       location: v.modality === "IN_PERSON" ? v.location : null,
       meetingUrl:
         v.modality === "VIRTUAL" && v.meetingUrl !== "" ? v.meetingUrl : null,
+      groupUrl: v.groupUrl !== "" ? v.groupUrl : null,
       description: v.description,
     }))
 }

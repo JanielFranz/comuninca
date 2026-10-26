@@ -35,6 +35,17 @@
   font-size: 14.5px;
 }
 
+.textInputTight {
+  composes: textInput;
+  margin-bottom: 6px;
+}
+
+.fieldHint {
+  font-size: 12.5px;
+  color: var(--color-muted);
+  margin-bottom: 16px;
+}
+
 .pillRow {
   display: flex;
   flex-wrap: wrap;

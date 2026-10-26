@@ -7,6 +7,7 @@ import type {
   CurrentUser,
   DayModalEventView,
   MonthCell,
+  OptimisticJoin,
   User,
   WeekData,
   WeekStart,
@@ -36,6 +37,35 @@ import { STRINGS } from "./strings"
 /** Accepts the reference "today" as a Date or an ISO "YYYY-MM-DD" key. */
 function toToday(today: Date | string): Date {
   return typeof today === "string" ? parseDateKey(today) : today
+}
+
+/**
+ * Layers a pending join/leave on top of the server events. Server events stay
+ * the source of truth; this only makes the button (and the group link) react
+ * before the refresh lands. Joining reveals the group link handed back by
+ * `toggleJoin`; leaving hides it again, except for the host, who always keeps
+ * their own.
+ */
+export function applyOptimisticJoin(
+  events: CalendarEvent[],
+  optimistic: OptimisticJoin | null,
+  userId: string,
+): CalendarEvent[] {
+  if (!optimistic) return events
+  return events.map((ev) => {
+    if (ev.id !== optimistic.eventId) return ev
+    const currentlyGoing = ev.attendeeIds.indexOf(userId) >= 0
+    if (currentlyGoing === optimistic.joined) return ev
+    const attendeeIds = optimistic.joined
+      ? [...ev.attendeeIds, userId]
+      : ev.attendeeIds.filter((id) => id !== userId)
+    const groupUrl = optimistic.joined
+      ? (optimistic.groupUrl ?? ev.groupUrl)
+      : ev.hostId === userId
+        ? ev.groupUrl
+        : null
+    return { ...ev, attendeeIds, groupUrl }
+  })
 }
 
 export function getEventsForDate(
@@ -384,6 +414,7 @@ export function buildActiveEvent(
       pictureUrl: null,
       modality: "IN_PERSON",
       meetingUrl: null,
+      groupUrl: null,
       hostInitials: "",
       hostName: "",
       attendees: [],
@@ -426,6 +457,8 @@ export function buildActiveEvent(
     pictureUrl: ev.pictureUrl,
     modality: ev.modality,
     meetingUrl: ev.meetingUrl,
+    // Defense in depth: the server already withholds it from everyone else.
+    groupUrl: isGoing || hostIsMe ? ev.groupUrl : null,
     hostInitials: host.initials,
     hostName: hostIsMe ? STRINGS.fallbackUserName : host.name,
     attendees: attendees.map((a) => ({ initials: a.initials })),

@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import Image from "next/image"
 import type { ActiveEventView } from "@/lib/types"
 import { STRINGS } from "@/lib/strings"
-import { isValidMeetingUrl } from "@/lib/validation/events"
+import { isValidGroupUrl, isValidMeetingUrl } from "@/lib/validation/events"
 import Modal, { ModalCloseButton } from "./Modal"
 import styles from "./EventDetailModal.module.css"
 
@@ -47,6 +47,13 @@ export default function EventDetailModal({
     event.meetingUrl !== null &&
     isValidMeetingUrl(event.meetingUrl)
       ? event.meetingUrl
+      : null
+  // Same defense in depth for the group link. It is only ever non-null for
+  // the host and the people who joined (server + `buildActiveEvent`), so
+  // showing it whenever it is present is what reveals it after "Unirme".
+  const groupLink =
+    event.groupUrl !== null && isValidGroupUrl(event.groupUrl)
+      ? event.groupUrl
       : null
 
   return (
@@ -134,6 +141,19 @@ export default function EventDetailModal({
       >
         {event.joinLabel}
       </button>
+      {groupLink && (
+        <div className={styles.groupSection}>
+          <div className={styles.sectionLabel}>{t.groupLabel}</div>
+          <a
+            href={groupLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.groupLink}
+          >
+            {groupLink}
+          </a>
+        </div>
+      )}
       {joinError && (
         <div className={styles.joinError} role="alert">
           {joinError}
